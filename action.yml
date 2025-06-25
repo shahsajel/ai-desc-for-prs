@@ -22,10 +22,6 @@ inputs:
   ignores:
     description: 'AI will not analyze changes to files or folders in this array'
     required: false
-  use_jira:
-    description: 'Add Jira ticket by checking branch name'
-    required: false
-    default: 'false'
 outputs:
   description:
     description: 'The AI-generated description for the pull request, providing context and details for reviewers.'
