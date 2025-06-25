@@ -140,7 +140,7 @@ class PullRequestUpdater {
         await this.gitHelper.fetchGitBranches(baseBranch, headBranch);
 
         // Get the diff and analyze changes
-        const diffOutput = this.gitHelper.getGitDiff(baseBranch, headBranch);
+        const diffOutput = this.gitHelper.getGitDiff(baseBranch, headBranch, eventAction);
         
         // For synchronize events, check if changes are significant enough
         if (eventAction === 'synchronize') {
@@ -229,20 +229,26 @@ class PullRequestUpdater {
         issue_number: pullRequestNumber,
       });
 
+      console.log(`Found ${comments.length} total comments on PR #${pullRequestNumber}`);
+      
+      // Debug: Log all comments to see what we're working with
+      comments.forEach((comment, index) => {
+        const preview = comment.body?.substring(0, 100).replace(/\n/g, ' ') || 'No body';
+        console.log(`Comment ${index + 1}: User: ${comment.user?.login}, Preview: "${preview}..."`);
+      });
+
       // Find comment that contains "### Description" (our AI-generated format)
       const botComment = comments.find(comment => {
         if (!comment.body) return false;
         
         // Look for our markdown header format
         const body = comment.body.trim();
-        const hasDescriptionHeader = body.includes('### Description') || body.startsWith('Description\n');
-        
-        // Also check if it was posted by github-actions bot
+        const hasDescriptionHeader = body.includes('### Description') || body.startsWith('Description\n') || body.startsWith('Description');
         
         // Additional check for typical AI-generated content structure
         const hasTypicalStructure = body.includes('This pull request') || body.includes('Type of change') || body.includes('### Testing');
         
-        return hasDescriptionHeader  && hasTypicalStructure;
+        return hasDescriptionHeader && hasTypicalStructure;
       });
 
       if (botComment) {
