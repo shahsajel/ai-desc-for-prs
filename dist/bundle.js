@@ -23971,55 +23971,56 @@ var PullRequestUpdater = class {
   }
   generatePrompt(diffOutput) {
     return `Instructions:
-  Generate a Pull Request description in the following Markdown format based on the provided diff. Only generate the description, no other text.:
-  
-  ### Description
-  
-  <!-- Describe changes based on the diff in detail -->
-  
-  Diff:
-  ${diffOutput}
-  
-  #### Type of change
-  
-  <!-- Check all that apply -->
-  <!-- "New feature" should include upgrading packages in our base Python image (follow instructions here: https://www.notion.so/hexhq/Bumping-Python-Packages-dad4c9efd9654f5d9f1c3cf38d73e896) -->
-  
-  - [ ] Bug fix <!-- change that fixes an issue -->
-  - [ ] UI Polish <!-- change that polishes/enhances UI -->
-  - [ ] New feature <!-- change that adds functionality -->
-  - [ ] Refactor <!-- behind-the-scenes code changes with no user-facing changes -->
-  - [ ] Non-product change <!-- documentation updates, change that only affects tests, etc. -->
-  - [ ] Breaking <!-- fix or feature that would cause existing functionality to not work as expected -->
-  
-  #### Related
-  
-  - Fixes: {Issue ID} <!-- issue will automatically be closed on merge -->
-  - References: {Issue ID} <!-- issue will only be linked, not closed -->
-  
-  <!-- List out any links, issues, or PRs here that provide additional context -->
-  <!-- If this PR fixes multiple issues, list them here -->
-  <!-- Replace '{Issue ID}' with the appropriate issue ID from Linear -->
-  
-  ### Screenshots
-  
-  <!-- Should be included for any UI/UX changes, otherwise remove this section -->
-  
-  ### Testing
-  
-  <!-- Describe your test cases or why this doesn't require testing (e.g. already covered by tests) -->
-  
-  <details>
-  <summary><h3>CR checklist</h3></summary>
-  
-  By approving this PR, I have verified the following:
-  
-  - Correctness: Does this PR correctly implement the described change? Are there any unintended effects?
-  - Code style: is this consistent with the rest of the codebase?
-  - Security: Are there any security implications of this change, e.g. [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-  - Infrastructure: Does this change have any security implications for the infrastructure, e.g. networking changes
-  </details>
-`;
+Generate a Pull Request description in the following Markdown format based on the provided diff. IMPORTANT: Follow the exact markdown format below, including the ### headers:
+
+### Description
+
+<!-- Describe changes based on the diff in detail -->
+
+Diff:
+${diffOutput}
+
+#### Type of change
+
+<!-- Check all that apply -->
+<!-- "New feature" should include upgrading packages in our base Python image (follow instructions here: https://www.notion.so/hexhq/Bumping-Python-Packages-dad4c9efd9654f5d9f1c3cf38d73e896) -->
+
+- [ ] Bug fix <!-- change that fixes an issue -->
+- [ ] UI Polish <!-- change that polishes/enhances UI -->
+- [ ] New feature <!-- change that adds functionality -->
+- [ ] Refactor <!-- behind-the-scenes code changes with no user-facing changes -->
+- [ ] Non-product change <!-- documentation updates, change that only affects tests, etc. -->
+- [ ] Breaking <!-- fix or feature that would cause existing functionality to not work as expected -->
+
+#### Related
+
+- Fixes: {Issue ID} <!-- issue will automatically be closed on merge -->
+- References: {Issue ID} <!-- issue will only be linked, not closed -->
+
+<!-- List out any links, issues, or PRs here that provide additional context -->
+<!-- If this PR fixes multiple issues, list them here -->
+<!-- Replace '{Issue ID}' with the appropriate issue ID from Linear -->
+
+### Screenshots
+
+<!-- Should be included for any UI/UX changes, otherwise remove this section -->
+
+### Testing
+
+<!-- Describe your test cases or why this doesn't require testing (e.g. already covered by tests) -->
+
+<details>
+<summary><h3>CR checklist</h3></summary>
+
+By approving this PR, I have verified the following:
+
+- Correctness: Does this PR correctly implement the described change? Are there any unintended effects?
+- Code style: is this consistent with the rest of the codebase?
+- Security: Are there any security implications of this change, e.g. [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- Infrastructure: Does this change have any security implications for the infrastructure, e.g. networking changes
+</details>
+
+IMPORTANT: Start your response with exactly "### Description" (with three hashes) and follow the markdown structure above.`;
   }
   analyzeChangesSignificance(diffOutput) {
     const lines = diffOutput.split("\n");
@@ -24127,9 +24128,19 @@ var PullRequestUpdater = class {
         repo: this.context.repo.repo,
         issue_number: pullRequestNumber
       });
-      const botComment = comments.find(
-        (comment) => comment.body && comment.body.includes(this.DESCRIPTION_IDENTIFIER)
-      );
+      const botComment = comments.find((comment) => {
+        if (!comment.body) return false;
+        const body = comment.body.trim();
+        const hasDescriptionHeader = body.includes("### Description") || body.startsWith("Description\n");
+        const isFromBot = comment.user?.login === "github-actions[bot]" || comment.user?.type === "Bot";
+        const hasTypicalStructure = body.includes("This pull request") || body.includes("Type of change") || body.includes("### Testing");
+        return (hasDescriptionHeader || isFromBot) && hasTypicalStructure;
+      });
+      if (botComment) {
+        console.log(`Found existing bot comment #${botComment.id}`);
+      } else {
+        console.log("No existing bot comment found");
+      }
       return botComment || null;
     } catch (error) {
       console.error("Error finding existing bot comment:", error);

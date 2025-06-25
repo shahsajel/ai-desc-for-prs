@@ -229,10 +229,27 @@ class PullRequestUpdater {
         issue_number: pullRequestNumber,
       });
 
-      // Find comment with our bot identifier
-      const botComment = comments.find(comment => 
-        comment.body && comment.body.includes(this.DESCRIPTION_IDENTIFIER)
-      );
+      // Find comment that contains "### Description" (our AI-generated format)
+      const botComment = comments.find(comment => {
+        if (!comment.body) return false;
+        
+        // Look for our markdown header format
+        const body = comment.body.trim();
+        const hasDescriptionHeader = body.includes('### Description') || body.startsWith('Description\n');
+        
+        // Also check if it was posted by github-actions bot
+        
+        // Additional check for typical AI-generated content structure
+        const hasTypicalStructure = body.includes('This pull request') || body.includes('Type of change') || body.includes('### Testing');
+        
+        return hasDescriptionHeader  && hasTypicalStructure;
+      });
+
+      if (botComment) {
+        console.log(`Found existing bot comment #${botComment.id}`);
+      } else {
+        console.log('No existing bot comment found');
+      }
 
       return botComment || null;
     } catch (error) {
