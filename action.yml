@@ -1,4 +1,4 @@
-name: 'AI-Powered PR Description Generator'
+name: 'OpenAI Generated PR Descriptions'
 description: 'Utilizes advanced AI algorithms to automatically generate pull request descriptions.'
 author: 'Rock Chen'
 runs:
