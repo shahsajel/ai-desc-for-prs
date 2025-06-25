@@ -23955,6 +23955,7 @@ var PullRequestUpdater = class {
   context;
   aiHelper;
   octokit;
+  BOT_COMMENT_IDENTIFIER = "<!-- AI-GENERATED-DESCRIPTION -->";
   constructor() {
     this.gitHelper = new GitHelper((0, import_core.getInput)("ignores"));
     this.context = import_github.context;
@@ -23968,11 +23969,14 @@ var PullRequestUpdater = class {
   }
   generatePrompt(diffOutput) {
     return `Instructions:
-  Generate a Pull Request description in the following Markdown format based on the provided diff:
+  Generate a Pull Request description in the following Markdown format based on the provided diff. Only generate the description, no other text.:
   
   ### Description
   
-  <!-- Describe your changes in detail -->
+  <!-- Describe changes based on the diff in detail -->
+  
+  Diff:
+  ${diffOutput}
   
   #### Type of change
   
@@ -24013,18 +24017,58 @@ var PullRequestUpdater = class {
   - Security: Are there any security implications of this change, e.g. [OWASP Top 10](https://owasp.org/www-project-top-ten/)
   - Infrastructure: Does this change have any security implications for the infrastructure, e.g. networking changes
   </details>
-  
-  Diff:
-  ${diffOutput}`;
+`;
+  }
+  analyzeChangesSignificance(diffOutput) {
+    const lines = diffOutput.split("\n");
+    const addedLines = lines.filter((line) => line.startsWith("+")).length;
+    const deletedLines = lines.filter((line) => line.startsWith("-")).length;
+    const totalChangedLines = addedLines + deletedLines;
+    const filesChanged = (diffOutput.match(/^diff --git/gm) || []).length;
+    const hasNewFunctions = /^\+.*(?:function|def|class|interface|type)\s+\w+/gm.test(diffOutput);
+    const hasImportChanges = /^\+.*(?:import|from|require)\s+/gm.test(diffOutput);
+    const hasConfigChanges = /^diff --git.*\.(json|yml|yaml|toml|ini|config)$/gm.test(diffOutput);
+    if (totalChangedLines >= 50) {
+      return { isSignificant: true, reason: `Large change detected: ${totalChangedLines} lines changed` };
+    }
+    if (filesChanged >= 5) {
+      return { isSignificant: true, reason: `Multiple files changed: ${filesChanged} files` };
+    }
+    if (hasNewFunctions) {
+      return { isSignificant: true, reason: "New functions/classes/interfaces added" };
+    }
+    if (hasImportChanges) {
+      return { isSignificant: true, reason: "Import/dependency changes detected" };
+    }
+    if (hasConfigChanges) {
+      return { isSignificant: true, reason: "Configuration file changes detected" };
+    }
+    if (totalChangedLines >= 20) {
+      return { isSignificant: true, reason: `Moderate change detected: ${totalChangedLines} lines changed` };
+    }
+    return { isSignificant: false, reason: `Minor change: only ${totalChangedLines} lines changed in ${filesChanged} files` };
   }
   async run() {
     try {
       this.validateEventContext();
       const pullRequestNumber = this.context.payload.pull_request.number;
       const { baseBranch, headBranch } = this.extractBranchRefs();
+      const eventAction = this.context.payload.action;
+      console.log(`PR #${pullRequestNumber} - Event: ${eventAction}`);
       this.gitHelper.setupGitConfiguration();
       await this.gitHelper.fetchGitBranches(baseBranch, headBranch);
       const diffOutput = this.gitHelper.getGitDiff(baseBranch, headBranch);
+      if (eventAction === "synchronize") {
+        const { isSignificant, reason } = this.analyzeChangesSignificance(diffOutput);
+        console.log(`Change analysis: ${reason}`);
+        if (!isSignificant) {
+          console.log("Changes are not significant enough to update PR description. Skipping update.");
+          (0, import_core.setOutput)("pr_number", pullRequestNumber.toString());
+          (0, import_core.setOutput)("description", "No update - changes not significant");
+          return;
+        }
+        console.log("Significant changes detected. Updating PR description...");
+      }
       const prompt = this.generatePrompt(diffOutput);
       const generatedDescription = await this.aiHelper.createPullRequestDescription(diffOutput, prompt);
       await this.updatePullRequestDescription(pullRequestNumber, generatedDescription);
@@ -24052,7 +24096,7 @@ var PullRequestUpdater = class {
       const pullRequest = await this.fetchPullRequestDetails(pullRequestNumber);
       const currentDescription = pullRequest.body || "";
       if (currentDescription) {
-        await this.postOriginalDescriptionComment(pullRequestNumber, currentDescription);
+        await this.handleOriginalDescriptionComment(pullRequestNumber, currentDescription);
       }
       await this.applyPullRequestUpdate(pullRequestNumber, generatedDescription);
     } catch (error) {
@@ -24060,7 +24104,6 @@ var PullRequestUpdater = class {
       throw error;
     }
   }
-  \u00CF;
   async fetchPullRequestDetails(pullRequestNumber) {
     const { data } = await this.octokit.rest.pulls.get({
       owner: this.context.repo.owner,
@@ -24072,15 +24115,50 @@ var PullRequestUpdater = class {
   extractBranchName() {
     return this.context.payload.pull_request.head.ref.replace("feat/", "").replace("fix/", "");
   }
-  async postOriginalDescriptionComment(pullRequestNumber, currentDescription) {
-    await this.octokit.rest.issues.createComment({
-      owner: this.context.repo.owner,
-      repo: this.context.repo.repo,
-      issue_number: pullRequestNumber,
-      body: `**Original description**:
+  async findExistingBotComment(pullRequestNumber) {
+    try {
+      const { data: comments } = await this.octokit.rest.issues.listComments({
+        owner: this.context.repo.owner,
+        repo: this.context.repo.repo,
+        issue_number: pullRequestNumber
+      });
+      const botComment = comments.find(
+        (comment) => comment.body && comment.body.includes(this.BOT_COMMENT_IDENTIFIER)
+      );
+      return botComment || null;
+    } catch (error) {
+      console.error("Error finding existing bot comment:", error);
+      return null;
+    }
+  }
+  async handleOriginalDescriptionComment(pullRequestNumber, currentDescription) {
+    try {
+      const existingComment = await this.findExistingBotComment(pullRequestNumber);
+      const commentBody = `${this.BOT_COMMENT_IDENTIFIER}
+**Original description**:
 
-${currentDescription}`
-    });
+${currentDescription}`;
+      if (existingComment) {
+        console.log(`Updating existing bot comment #${existingComment.id}`);
+        await this.octokit.rest.issues.updateComment({
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          comment_id: existingComment.id,
+          body: commentBody
+        });
+      } else {
+        console.log("Creating new bot comment");
+        await this.octokit.rest.issues.createComment({
+          owner: this.context.repo.owner,
+          repo: this.context.repo.repo,
+          issue_number: pullRequestNumber,
+          body: commentBody
+        });
+      }
+    } catch (error) {
+      console.error("Error handling original description comment:", error);
+      throw error;
+    }
   }
   async applyPullRequestUpdate(pullRequestNumber, newDescription) {
     await this.octokit.rest.pulls.update({

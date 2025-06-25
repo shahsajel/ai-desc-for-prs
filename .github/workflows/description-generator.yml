@@ -2,6 +2,7 @@ name: AI-Powered PR Description Generator
 
 on:
   pull_request:
+    types: [opened, synchronize]
     branches:
       - main
       - master
@@ -24,6 +25,6 @@ jobs:
         uses: ./
         with:
           ai_name: 'open-ai'
-          api_key: ${{ secrets.OPEN_AI_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          api_key: ${{ secrets.OPENAI_API_KEY }}
+          github_token: ${{ secrets.GH_TOKEN }}
           temperature: 0.7  # Optional: default is 0.7
