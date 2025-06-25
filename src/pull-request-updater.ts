@@ -9,7 +9,7 @@ class PullRequestUpdater {
   private context: any;
   private aiHelper: AIHelperInterface;
   private octokit: any;
-  private readonly BOT_COMMENT_IDENTIFIER = '<!-- AI-GENERATED-DESCRIPTION -->';
+  private readonly DESCRIPTION_IDENTIFIER = '### Description';
 
   constructor() {
     this.gitHelper = new GitHelper(getInput('ignores'));
@@ -82,13 +82,18 @@ class PullRequestUpdater {
     const deletedLines = lines.filter(line => line.startsWith('-')).length;
     const totalChangedLines = addedLines + deletedLines;
     
-    // Count files changed
+    // Count files changed (new + modified files)
     const filesChanged = (diffOutput.match(/^diff --git/gm) || []).length;
     
     // Check for significant patterns
     const hasNewFunctions = /^\+.*(?:function|def|class|interface|type)\s+\w+/gm.test(diffOutput);
     const hasImportChanges = /^\+.*(?:import|from|require)\s+/gm.test(diffOutput);
     const hasConfigChanges = /^diff --git.*\.(json|yml|yaml|toml|ini|config)$/gm.test(diffOutput);
+    
+    // No files changed
+    if (filesChanged === 0 || !diffOutput.trim()) {
+      return { isSignificant: false, reason: 'No files changed' };
+    }
     
     // Determine significance based on multiple factors
     if (totalChangedLines >= 50) {
@@ -112,7 +117,7 @@ class PullRequestUpdater {
     }
     
     if (totalChangedLines >= 20) {
-      return { isSignificant: true, reason: `Moderate change detected: ${totalChangedLines} lines changed` };
+      return { isSignificant: true, reason: `Moderate change detected: ${totalChangedLines} lines changed in ${filesChanged} files` };
     }
     
     return { isSignificant: false, reason: `Minor change: only ${totalChangedLines} lines changed in ${filesChanged} files` };
@@ -226,7 +231,7 @@ class PullRequestUpdater {
 
       // Find comment with our bot identifier
       const botComment = comments.find(comment => 
-        comment.body && comment.body.includes(this.BOT_COMMENT_IDENTIFIER)
+        comment.body && comment.body.includes(this.DESCRIPTION_IDENTIFIER)
       );
 
       return botComment || null;
@@ -239,7 +244,6 @@ class PullRequestUpdater {
   async handleOriginalDescriptionComment(pullRequestNumber: number, currentDescription: string) {
     try {
       const existingComment = await this.findExistingBotComment(pullRequestNumber);
-      const commentBody = `${this.BOT_COMMENT_IDENTIFIER}\n**Original description**:\n\n${currentDescription}`;
 
       if (existingComment) {
         // Update existing comment
@@ -248,7 +252,7 @@ class PullRequestUpdater {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
           comment_id: existingComment.id,
-          body: commentBody
+          body: currentDescription
         });
       } else {
         // Create new comment
@@ -257,7 +261,7 @@ class PullRequestUpdater {
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
           issue_number: pullRequestNumber,
-          body: commentBody
+          body: currentDescription
         });
       }
     } catch (error) {

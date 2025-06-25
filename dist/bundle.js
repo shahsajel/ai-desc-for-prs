@@ -23888,7 +23888,9 @@ var GitHelper = class {
       ":!**/dist/*"
     ];
     const ignoreFiles = this.ignores ? this.ignores.split(",").map((item) => `:!${item.trim()}`) : defaultIgnoreFiles;
+    console.log("Getting diff for changed files (new + modified)...");
     const diffOutput = (0, import_child_process.execSync)(`git diff origin/${baseBranch} origin/${headBranch} -- ${ignoreFiles.join(" ")}`, { encoding: "utf8" });
+    console.log("Diff output:", diffOutput ? "Found changed files" : "No changes detected");
     return diffOutput;
   }
 };
@@ -23955,7 +23957,7 @@ var PullRequestUpdater = class {
   context;
   aiHelper;
   octokit;
-  BOT_COMMENT_IDENTIFIER = "<!-- AI-GENERATED-DESCRIPTION -->";
+  DESCRIPTION_IDENTIFIER = "### Description";
   constructor() {
     this.gitHelper = new GitHelper((0, import_core.getInput)("ignores"));
     this.context = import_github.context;
@@ -24028,6 +24030,9 @@ var PullRequestUpdater = class {
     const hasNewFunctions = /^\+.*(?:function|def|class|interface|type)\s+\w+/gm.test(diffOutput);
     const hasImportChanges = /^\+.*(?:import|from|require)\s+/gm.test(diffOutput);
     const hasConfigChanges = /^diff --git.*\.(json|yml|yaml|toml|ini|config)$/gm.test(diffOutput);
+    if (filesChanged === 0 || !diffOutput.trim()) {
+      return { isSignificant: false, reason: "No files changed" };
+    }
     if (totalChangedLines >= 50) {
       return { isSignificant: true, reason: `Large change detected: ${totalChangedLines} lines changed` };
     }
@@ -24044,7 +24049,7 @@ var PullRequestUpdater = class {
       return { isSignificant: true, reason: "Configuration file changes detected" };
     }
     if (totalChangedLines >= 20) {
-      return { isSignificant: true, reason: `Moderate change detected: ${totalChangedLines} lines changed` };
+      return { isSignificant: true, reason: `Moderate change detected: ${totalChangedLines} lines changed in ${filesChanged} files` };
     }
     return { isSignificant: false, reason: `Minor change: only ${totalChangedLines} lines changed in ${filesChanged} files` };
   }
@@ -24123,7 +24128,7 @@ var PullRequestUpdater = class {
         issue_number: pullRequestNumber
       });
       const botComment = comments.find(
-        (comment) => comment.body && comment.body.includes(this.BOT_COMMENT_IDENTIFIER)
+        (comment) => comment.body && comment.body.includes(this.DESCRIPTION_IDENTIFIER)
       );
       return botComment || null;
     } catch (error) {
@@ -24134,17 +24139,13 @@ var PullRequestUpdater = class {
   async handleOriginalDescriptionComment(pullRequestNumber, currentDescription) {
     try {
       const existingComment = await this.findExistingBotComment(pullRequestNumber);
-      const commentBody = `${this.BOT_COMMENT_IDENTIFIER}
-**Original description**:
-
-${currentDescription}`;
       if (existingComment) {
         console.log(`Updating existing bot comment #${existingComment.id}`);
         await this.octokit.rest.issues.updateComment({
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
           comment_id: existingComment.id,
-          body: commentBody
+          body: currentDescription
         });
       } else {
         console.log("Creating new bot comment");
@@ -24152,7 +24153,7 @@ ${currentDescription}`;
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,
           issue_number: pullRequestNumber,
-          body: commentBody
+          body: currentDescription
         });
       }
     } catch (error) {

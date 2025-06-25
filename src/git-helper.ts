@@ -27,9 +27,12 @@ export class GitHelper {
           ? this.ignores.split(',').map(item => `:!${item.trim()}`) // Trim whitespace from items
           : defaultIgnoreFiles;
   
-  
-      // Execute the git diff command and get the output
+      console.log('Getting diff for changed files (new + modified)...');
+      
+      // Execute the git diff command to get both new and modified files (but not untouched files)
       const diffOutput = execSync(`git diff origin/${baseBranch} origin/${headBranch} -- ${ignoreFiles.join(' ')}`, { encoding: 'utf8' });
+      
+      console.log('Diff output:', diffOutput ? 'Found changed files' : 'No changes detected');
       
       return diffOutput;
   }
