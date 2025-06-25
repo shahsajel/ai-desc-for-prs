@@ -1,6 +1,6 @@
 name: 'OpenAI Generated PR Descriptions'
 description: 'Utilizes advanced AI algorithms to automatically generate pull request descriptions.'
-author: 'Rock Chen'
+author: 'Sajel Shah - Forked From Rock Chen'
 runs:
   using: 'node20'
   main: './dist/bundle.js'
@@ -26,5 +26,5 @@ outputs:
   description:
     description: 'The AI-generated description for the pull request, providing context and details for reviewers.'
 branding:
-  icon: 'AI-Powered PR'
-  color: 'red'
+  icon: 'align-justify'
+  color: 'purple'
