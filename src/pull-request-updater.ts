@@ -22,24 +22,58 @@ class PullRequestUpdater {
     this.octokit = getOctokit(githubToken);
   }
 
-   private generatePrompt(diffOutput: string, creator: string): string {
-      return `Instructions:
-    Please generate a Pull Request description for the provided diff, following these guidelines:
-    - Start with a subtitle "## What this PR does?".
-    - Format your response in Markdown.
-    - Exclude the PR title (e.g., "feat: xxx", "fix: xxx", "Refactor: xxx").
-    - Do not include the diff in the PR description.
-    - Provide a simple description of the changes.
-    - Avoid code snippets or images.
-    - Add some fun with emojis! Use only the following: 🚀🎉👍👏🔥. List changes using numbers, with a maximum of one emoji per item. Limit the total to 3 emojis. Example: 
-      1. Added a new feature👏 
-      2. Fixed a bug👍 
-      3. Major refactor🚀.
-    - Thank **${creator}** for the contribution! 🎉
+  private generatePrompt(diffOutput: string): string {
+    return `Instructions:
+  Generate a Pull Request description in the following Markdown format based on the provided diff:
   
-    Diff:
-    ${diffOutput}`;
+  ### Description
+  
+  <!-- Describe your changes in detail -->
+  
+  #### Type of change
+  
+  <!-- Check all that apply -->
+  <!-- \"New feature\" should include upgrading packages in our base Python image (follow instructions here: https://www.notion.so/hexhq/Bumping-Python-Packages-dad4c9efd9654f5d9f1c3cf38d73e896) -->
+  
+  - [ ] Bug fix <!-- change that fixes an issue -->
+  - [ ] UI Polish <!-- change that polishes/enhances UI -->
+  - [ ] New feature <!-- change that adds functionality -->
+  - [ ] Refactor <!-- behind-the-scenes code changes with no user-facing changes -->
+  - [ ] Non-product change <!-- documentation updates, change that only affects tests, etc. -->
+  - [ ] Breaking <!-- fix or feature that would cause existing functionality to not work as expected -->
+  
+  #### Related
+  
+  - Fixes: {Issue ID} <!-- issue will automatically be closed on merge -->
+  - References: {Issue ID} <!-- issue will only be linked, not closed -->
+  
+  <!-- List out any links, issues, or PRs here that provide additional context -->
+  <!-- If this PR fixes multiple issues, list them here -->
+  <!-- Replace '{Issue ID}' with the appropriate issue ID from Linear -->
+  
+  ### Screenshots
+  
+  <!-- Should be included for any UI/UX changes, otherwise remove this section -->
+  
+  ### Testing
+  
+  <!-- Describe your test cases or why this doesn't require testing (e.g. already covered by tests) -->
+  
+  <details>
+  <summary><h3>CR checklist</h3></summary>
+  
+  By approving this PR, I have verified the following:
+  
+  - Correctness: Does this PR correctly implement the described change? Are there any unintended effects?
+  - Code style: is this consistent with the rest of the codebase?
+  - Security: Are there any security implications of this change, e.g. [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+  - Infrastructure: Does this change have any security implications for the infrastructure, e.g. networking changes
+  </details>
+  
+  Diff:
+  ${diffOutput}`;
   }
+  
 
   async run() {
     try {
@@ -48,7 +82,6 @@ class PullRequestUpdater {
 
         // Extract pull request details
         const pullRequestNumber = this.context.payload.pull_request.number;
-        const creator = this.context.payload.pull_request.user.login;
         const { baseBranch, headBranch } = this.extractBranchRefs();
 
         // Set up Git configuration and fetch branches
@@ -57,7 +90,7 @@ class PullRequestUpdater {
 
         // Get the diff and generate the PR description
         const diffOutput = this.gitHelper.getGitDiff(baseBranch, headBranch);
-        const prompt = this.generatePrompt(diffOutput, creator);
+        const prompt = this.generatePrompt(diffOutput);
         const generatedDescription = await this.aiHelper.createPullRequestDescription(diffOutput, prompt);
 
         // Update the pull request description
@@ -67,7 +100,6 @@ class PullRequestUpdater {
         setOutput('pr_number', pullRequestNumber.toString());
         setOutput('description', generatedDescription);
         
-        console.log(`Successfully updated PR #${pullRequestNumber} description.`);
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         setFailed(errorMessage);
@@ -85,8 +117,6 @@ class PullRequestUpdater {
   extractBranchRefs() {
     const baseBranch = this.context.payload.pull_request.base.ref;
     const headBranch = this.context.payload.pull_request.head.ref;
-    console.log(`Base branch: ${baseBranch}`);
-    console.log(`Head branch: ${headBranch}`);
     return { baseBranch, headBranch };
   }
 
@@ -124,25 +154,21 @@ class PullRequestUpdater {
   }
 
   async postOriginalDescriptionComment(pullRequestNumber: number, currentDescription: string) {
-    console.log('Creating comment with original description...');
     await this.octokit.rest.issues.createComment({
       owner: this.context.repo.owner,
       repo: this.context.repo.repo,
       issue_number: pullRequestNumber,
       body: `**Original description**:\n\n${currentDescription}`
     });
-    console.log('Comment created successfully.');
   }
 
   async applyPullRequestUpdate(pullRequestNumber: number, newDescription: string) {
-    console.log('Updating PR description...');
     await this.octokit.rest.pulls.update({
       owner: this.context.repo.owner,
       repo: this.context.repo.repo,
       pull_number: pullRequestNumber,
       body: newDescription,
     });
-    console.log('PR description updated successfully.');
   }
 }
 

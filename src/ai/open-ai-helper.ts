@@ -10,7 +10,6 @@ class OpenAIHelper implements AIHelperInterface {
 
   async createPullRequestDescription(diffOutput: string, prompt: string): Promise<string> {
     try {
-        console.log('call open ai');
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -22,7 +21,7 @@ class OpenAIHelper implements AIHelperInterface {
               messages: [
                 {
                   role: 'system',
-                  content: 'You are a super assistant, very good at reviewing code, and can generate the best pull request descriptions.',
+                  content: 'You are a super assistant, very good at reviewing code, and can generate the best pull request descriptions for engineers.',
                 },
                 {
                   role: 'user',
@@ -43,7 +42,7 @@ class OpenAIHelper implements AIHelperInterface {
           const description = data.choices[0].message.content.trim();
           return description;
     } catch (error) {
-      throw new Error(`OenAi API Error: ${error.message}`);
+      throw new Error(`OpenAi API Error: ${error.message}`);
     }
   }
 }
