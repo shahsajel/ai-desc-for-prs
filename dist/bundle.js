@@ -1191,16 +1191,16 @@ var require_util = __commonJS({
         yield Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
       }
     }
-    var ReadableStream2;
+    var ReadableStream;
     function ReadableStreamFrom(iterable) {
-      if (!ReadableStream2) {
-        ReadableStream2 = require("stream/web").ReadableStream;
+      if (!ReadableStream) {
+        ReadableStream = require("stream/web").ReadableStream;
       }
-      if (ReadableStream2.from) {
-        return ReadableStream2.from(convertIterableToBuffer(iterable));
+      if (ReadableStream.from) {
+        return ReadableStream.from(convertIterableToBuffer(iterable));
       }
       let iterator;
-      return new ReadableStream2(
+      return new ReadableStream(
         {
           async start() {
             iterator = iterable[Symbol.asyncIterator]();
@@ -1533,11 +1533,11 @@ var require_PartStream = __commonJS({
   "node_modules/@fastify/busboy/deps/dicer/lib/PartStream.js"(exports2, module2) {
     "use strict";
     var inherits = require("node:util").inherits;
-    var ReadableStream2 = require("node:stream").Readable;
+    var ReadableStream = require("node:stream").Readable;
     function PartStream(opts) {
-      ReadableStream2.call(this, opts);
+      ReadableStream.call(this, opts);
     }
-    inherits(PartStream, ReadableStream2);
+    inherits(PartStream, ReadableStream);
     PartStream.prototype._read = function(n) {
     };
     module2.exports = PartStream;
@@ -4121,12 +4121,12 @@ var require_util2 = __commonJS({
         errorSteps(e);
       }
     }
-    var ReadableStream2 = globalThis.ReadableStream;
+    var ReadableStream = globalThis.ReadableStream;
     function isReadableStreamLike(stream) {
-      if (!ReadableStream2) {
-        ReadableStream2 = require("stream/web").ReadableStream;
+      if (!ReadableStream) {
+        ReadableStream = require("stream/web").ReadableStream;
       }
-      return stream instanceof ReadableStream2 || stream[Symbol.toStringTag] === "ReadableStream" && typeof stream.tee === "function";
+      return stream instanceof ReadableStream || stream[Symbol.toStringTag] === "ReadableStream" && typeof stream.tee === "function";
     }
     var MAXIMUM_ARGUMENT_LENGTH = 65535;
     function isomorphicDecode(input) {
@@ -5268,21 +5268,21 @@ var require_body = __commonJS({
     var { isUint8Array, isArrayBuffer } = require("util/types");
     var { File: UndiciFile } = require_file();
     var { parseMIMEType, serializeAMimeType } = require_dataURL();
-    var ReadableStream2 = globalThis.ReadableStream;
+    var ReadableStream = globalThis.ReadableStream;
     var File = NativeFile ?? UndiciFile;
     var textEncoder = new TextEncoder();
     var textDecoder = new TextDecoder();
     function extractBody(object, keepalive = false) {
-      if (!ReadableStream2) {
-        ReadableStream2 = require("stream/web").ReadableStream;
+      if (!ReadableStream) {
+        ReadableStream = require("stream/web").ReadableStream;
       }
       let stream = null;
-      if (object instanceof ReadableStream2) {
+      if (object instanceof ReadableStream) {
         stream = object;
       } else if (isBlobLike(object)) {
         stream = object.stream();
       } else {
-        stream = new ReadableStream2({
+        stream = new ReadableStream({
           async pull(controller) {
             controller.enqueue(
               typeof source === "string" ? textEncoder.encode(source) : source
@@ -5372,14 +5372,14 @@ Content-Type: ${value.type || "application/octet-stream"}\r
             "Response body object should not be disturbed or locked"
           );
         }
-        stream = object instanceof ReadableStream2 ? object : ReadableStreamFrom(object);
+        stream = object instanceof ReadableStream ? object : ReadableStreamFrom(object);
       }
       if (typeof source === "string" || util.isBuffer(source)) {
         length = Buffer.byteLength(source);
       }
       if (action != null) {
         let iterator;
-        stream = new ReadableStream2({
+        stream = new ReadableStream({
           async start() {
             iterator = action(object)[Symbol.asyncIterator]();
           },
@@ -5406,10 +5406,10 @@ Content-Type: ${value.type || "application/octet-stream"}\r
       return [body, type];
     }
     function safelyExtractBody(object, keepalive = false) {
-      if (!ReadableStream2) {
-        ReadableStream2 = require("stream/web").ReadableStream;
+      if (!ReadableStream) {
+        ReadableStream = require("stream/web").ReadableStream;
       }
-      if (object instanceof ReadableStream2) {
+      if (object instanceof ReadableStream) {
         assert(!util.isDisturbed(object), "The body has already been consumed.");
         assert(!object.locked, "The stream is locked.");
       }
@@ -11676,7 +11676,7 @@ var require_headers = __commonJS({
         return headers;
       }
     };
-    var Headers2 = class _Headers {
+    var Headers = class _Headers {
       constructor(init = void 0) {
         if (init === kConstruct) {
           return;
@@ -11871,8 +11871,8 @@ var require_headers = __commonJS({
         return this[kHeadersList];
       }
     };
-    Headers2.prototype[Symbol.iterator] = Headers2.prototype.entries;
-    Object.defineProperties(Headers2.prototype, {
+    Headers.prototype[Symbol.iterator] = Headers.prototype.entries;
+    Object.defineProperties(Headers.prototype, {
       append: kEnumerableProperty,
       delete: kEnumerableProperty,
       get: kEnumerableProperty,
@@ -11904,7 +11904,7 @@ var require_headers = __commonJS({
     };
     module2.exports = {
       fill,
-      Headers: Headers2,
+      Headers,
       HeadersList
     };
   }
@@ -11914,7 +11914,7 @@ var require_headers = __commonJS({
 var require_response = __commonJS({
   "node_modules/undici/lib/fetch/response.js"(exports2, module2) {
     "use strict";
-    var { Headers: Headers2, HeadersList, fill } = require_headers();
+    var { Headers, HeadersList, fill } = require_headers();
     var { extractBody, cloneBody, mixinBody } = require_body();
     var util = require_util();
     var { kEnumerableProperty } = util;
@@ -11940,7 +11940,7 @@ var require_response = __commonJS({
     var { kHeadersList, kConstruct } = require_symbols();
     var assert = require("assert");
     var { types } = require("util");
-    var ReadableStream2 = globalThis.ReadableStream || require("stream/web").ReadableStream;
+    var ReadableStream = globalThis.ReadableStream || require("stream/web").ReadableStream;
     var textEncoder = new TextEncoder("utf-8");
     var Response = class _Response {
       // Creates network error Response.
@@ -12006,7 +12006,7 @@ var require_response = __commonJS({
         init = webidl.converters.ResponseInit(init);
         this[kRealm] = { settingsObject: {} };
         this[kState] = makeResponse({});
-        this[kHeaders] = new Headers2(kConstruct);
+        this[kHeaders] = new Headers(kConstruct);
         this[kHeaders][kGuard] = "response";
         this[kHeaders][kHeadersList] = this[kState].headersList;
         this[kHeaders][kRealm] = this[kRealm];
@@ -12227,7 +12227,7 @@ var require_response = __commonJS({
       }
     }
     webidl.converters.ReadableStream = webidl.interfaceConverter(
-      ReadableStream2
+      ReadableStream
     );
     webidl.converters.FormData = webidl.interfaceConverter(
       FormData
@@ -12254,7 +12254,7 @@ var require_response = __commonJS({
       return webidl.converters.DOMString(V);
     };
     webidl.converters.BodyInit = function(V) {
-      if (V instanceof ReadableStream2) {
+      if (V instanceof ReadableStream) {
         return webidl.converters.ReadableStream(V);
       }
       if (V?.[Symbol.asyncIterator]) {
@@ -12294,7 +12294,7 @@ var require_request2 = __commonJS({
   "node_modules/undici/lib/fetch/request.js"(exports2, module2) {
     "use strict";
     var { extractBody, mixinBody, cloneBody } = require_body();
-    var { Headers: Headers2, fill: fillHeaders, HeadersList } = require_headers();
+    var { Headers, fill: fillHeaders, HeadersList } = require_headers();
     var { FinalizationRegistry } = require_dispatcher_weakref()();
     var util = require_util();
     var {
@@ -12361,7 +12361,7 @@ var require_request2 = __commonJS({
               "Request cannot be constructed from a URL that includes credentials: " + input
             );
           }
-          request = makeRequest2({ urlList: [parsedURL] });
+          request = makeRequest({ urlList: [parsedURL] });
           fallbackMode = "cors";
         } else {
           assert(input instanceof _Request);
@@ -12379,7 +12379,7 @@ var require_request2 = __commonJS({
         if ("window" in init) {
           window = "no-window";
         }
-        request = makeRequest2({
+        request = makeRequest({
           // URL request’s URL.
           // undici implementation note: this is set as the first item in request's urlList in makeRequest
           // method request’s method.
@@ -12538,7 +12538,7 @@ var require_request2 = __commonJS({
             requestFinalizer.register(ac, { signal, abort });
           }
         }
-        this[kHeaders] = new Headers2(kConstruct);
+        this[kHeaders] = new Headers(kConstruct);
         this[kHeaders][kHeadersList] = request.headersList;
         this[kHeaders][kGuard] = "request";
         this[kHeaders][kRealm] = this[kRealm];
@@ -12737,7 +12737,7 @@ var require_request2 = __commonJS({
         const clonedRequestObject = new _Request(kConstruct);
         clonedRequestObject[kState] = clonedRequest;
         clonedRequestObject[kRealm] = this[kRealm];
-        clonedRequestObject[kHeaders] = new Headers2(kConstruct);
+        clonedRequestObject[kHeaders] = new Headers(kConstruct);
         clonedRequestObject[kHeaders][kHeadersList] = clonedRequest.headersList;
         clonedRequestObject[kHeaders][kGuard] = this[kHeaders][kGuard];
         clonedRequestObject[kHeaders][kRealm] = this[kHeaders][kRealm];
@@ -12757,7 +12757,7 @@ var require_request2 = __commonJS({
       }
     };
     mixinBody(Request);
-    function makeRequest2(init) {
+    function makeRequest(init) {
       const request = {
         method: "GET",
         localURLsOnly: false,
@@ -12801,7 +12801,7 @@ var require_request2 = __commonJS({
       return request;
     }
     function cloneRequest(request) {
-      const newRequest = makeRequest2({ ...request, body: null });
+      const newRequest = makeRequest({ ...request, body: null });
       if (request.body != null) {
         newRequest.body = cloneBody(request.body);
       }
@@ -12924,7 +12924,7 @@ var require_request2 = __commonJS({
         allowedValues: requestDuplex
       }
     ]);
-    module2.exports = { Request, makeRequest: makeRequest2 };
+    module2.exports = { Request, makeRequest };
   }
 });
 
@@ -12939,8 +12939,8 @@ var require_fetch = __commonJS({
       filterResponse,
       makeResponse
     } = require_response();
-    var { Headers: Headers2 } = require_headers();
-    var { Request, makeRequest: makeRequest2 } = require_request2();
+    var { Headers } = require_headers();
+    var { Request, makeRequest } = require_request2();
     var zlib = require("zlib");
     var {
       bytesMatch,
@@ -12994,7 +12994,7 @@ var require_fetch = __commonJS({
     var { STATUS_CODES } = require("http");
     var GET_OR_HEAD = ["GET", "HEAD"];
     var resolveObjectURL;
-    var ReadableStream2 = globalThis.ReadableStream;
+    var ReadableStream = globalThis.ReadableStream;
     var Fetch = class extends EE {
       constructor(dispatcher) {
         super();
@@ -13547,7 +13547,7 @@ var require_fetch = __commonJS({
         httpFetchParams = fetchParams;
         httpRequest = request;
       } else {
-        httpRequest = makeRequest2(request);
+        httpRequest = makeRequest(request);
         httpFetchParams = { ...fetchParams };
         httpFetchParams.request = httpRequest;
       }
@@ -13741,10 +13741,10 @@ var require_fetch = __commonJS({
       const cancelAlgorithm = (reason) => {
         fetchParams.controller.abort(reason);
       };
-      if (!ReadableStream2) {
-        ReadableStream2 = require("stream/web").ReadableStream;
+      if (!ReadableStream) {
+        ReadableStream = require("stream/web").ReadableStream;
       }
-      const stream = new ReadableStream2(
+      const stream = new ReadableStream(
         {
           async start(controller) {
             fetchParams.controller.controller = controller;
@@ -13852,7 +13852,7 @@ var require_fetch = __commonJS({
               }
               let codings = [];
               let location = "";
-              const headers = new Headers2();
+              const headers = new Headers();
               if (Array.isArray(headersList)) {
                 for (let n = 0; n < headersList.length; n += 2) {
                   const key = headersList[n + 0].toString("latin1");
@@ -13937,7 +13937,7 @@ var require_fetch = __commonJS({
               if (status !== 101) {
                 return;
               }
-              const headers = new Headers2();
+              const headers = new Headers();
               for (let n = 0; n < headersList.length; n += 2) {
                 const key = headersList[n + 0].toString("latin1");
                 const val = headersList[n + 1].toString("latin1");
@@ -15778,10 +15778,10 @@ var require_cookies = __commonJS({
     var { parseSetCookie } = require_parse();
     var { stringify, getHeadersList } = require_util6();
     var { webidl } = require_webidl();
-    var { Headers: Headers2 } = require_headers();
+    var { Headers } = require_headers();
     function getCookies(headers) {
       webidl.argumentLengthCheck(arguments, 1, { header: "getCookies" });
-      webidl.brandCheck(headers, Headers2, { strict: false });
+      webidl.brandCheck(headers, Headers, { strict: false });
       const cookie = headers.get("cookie");
       const out = {};
       if (!cookie) {
@@ -15795,7 +15795,7 @@ var require_cookies = __commonJS({
     }
     function deleteCookie(headers, name, attributes) {
       webidl.argumentLengthCheck(arguments, 2, { header: "deleteCookie" });
-      webidl.brandCheck(headers, Headers2, { strict: false });
+      webidl.brandCheck(headers, Headers, { strict: false });
       name = webidl.converters.DOMString(name);
       attributes = webidl.converters.DeleteCookieAttributes(attributes);
       setCookie(headers, {
@@ -15807,7 +15807,7 @@ var require_cookies = __commonJS({
     }
     function getSetCookies(headers) {
       webidl.argumentLengthCheck(arguments, 1, { header: "getSetCookies" });
-      webidl.brandCheck(headers, Headers2, { strict: false });
+      webidl.brandCheck(headers, Headers, { strict: false });
       const cookies = getHeadersList(headers).cookies;
       if (!cookies) {
         return [];
@@ -15816,7 +15816,7 @@ var require_cookies = __commonJS({
     }
     function setCookie(headers, cookie) {
       webidl.argumentLengthCheck(arguments, 2, { header: "setCookie" });
-      webidl.brandCheck(headers, Headers2, { strict: false });
+      webidl.brandCheck(headers, Headers, { strict: false });
       cookie = webidl.converters.Cookie(cookie);
       const str = stringify(cookie);
       if (str) {
@@ -16307,9 +16307,9 @@ var require_connection = __commonJS({
     } = require_symbols5();
     var { fireEvent, failWebsocketConnection } = require_util7();
     var { CloseEvent } = require_events();
-    var { makeRequest: makeRequest2 } = require_request2();
+    var { makeRequest } = require_request2();
     var { fetching } = require_fetch();
-    var { Headers: Headers2 } = require_headers();
+    var { Headers } = require_headers();
     var { getGlobalDispatcher } = require_global2();
     var { kHeadersList } = require_symbols();
     var channels = {};
@@ -16324,7 +16324,7 @@ var require_connection = __commonJS({
     function establishWebSocketConnection(url, protocols, ws, onEstablish, options) {
       const requestURL = url;
       requestURL.protocol = url.protocol === "ws:" ? "http:" : "https:";
-      const request = makeRequest2({
+      const request = makeRequest({
         urlList: [requestURL],
         serviceWorkers: "none",
         referrer: "no-referrer",
@@ -16334,7 +16334,7 @@ var require_connection = __commonJS({
         redirect: "error"
       });
       if (options.headers) {
-        const headersList = new Headers2(options.headers)[kHeadersList];
+        const headersList = new Headers(options.headers)[kHeadersList];
         request.headersList = headersList;
       }
       const keyValue = crypto.randomBytes(16).toString("base64");
@@ -17373,11 +17373,11 @@ var require_lib = __commonJS({
       HttpCodes2[HttpCodes2["ServiceUnavailable"] = 503] = "ServiceUnavailable";
       HttpCodes2[HttpCodes2["GatewayTimeout"] = 504] = "GatewayTimeout";
     })(HttpCodes || (exports2.HttpCodes = HttpCodes = {}));
-    var Headers2;
-    (function(Headers3) {
-      Headers3["Accept"] = "accept";
-      Headers3["ContentType"] = "content-type";
-    })(Headers2 || (exports2.Headers = Headers2 = {}));
+    var Headers;
+    (function(Headers2) {
+      Headers2["Accept"] = "accept";
+      Headers2["ContentType"] = "content-type";
+    })(Headers || (exports2.Headers = Headers = {}));
     var MediaTypes;
     (function(MediaTypes2) {
       MediaTypes2["ApplicationJson"] = "application/json";
@@ -17532,7 +17532,7 @@ var require_lib = __commonJS({
        */
       getJson(requestUrl, additionalHeaders = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-          additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes.ApplicationJson);
+          additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
           const res = yield this.get(requestUrl, additionalHeaders);
           return this._processResponse(res, this.requestOptions);
         });
@@ -17540,8 +17540,8 @@ var require_lib = __commonJS({
       postJson(requestUrl, obj, additionalHeaders = {}) {
         return __awaiter(this, void 0, void 0, function* () {
           const data = JSON.stringify(obj, null, 2);
-          additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes.ApplicationJson);
-          additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.ContentType, MediaTypes.ApplicationJson);
+          additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+          additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
           const res = yield this.post(requestUrl, data, additionalHeaders);
           return this._processResponse(res, this.requestOptions);
         });
@@ -17549,8 +17549,8 @@ var require_lib = __commonJS({
       putJson(requestUrl, obj, additionalHeaders = {}) {
         return __awaiter(this, void 0, void 0, function* () {
           const data = JSON.stringify(obj, null, 2);
-          additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes.ApplicationJson);
-          additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.ContentType, MediaTypes.ApplicationJson);
+          additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+          additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
           const res = yield this.put(requestUrl, data, additionalHeaders);
           return this._processResponse(res, this.requestOptions);
         });
@@ -17558,8 +17558,8 @@ var require_lib = __commonJS({
       patchJson(requestUrl, obj, additionalHeaders = {}) {
         return __awaiter(this, void 0, void 0, function* () {
           const data = JSON.stringify(obj, null, 2);
-          additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes.ApplicationJson);
-          additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.ContentType, MediaTypes.ApplicationJson);
+          additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+          additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
           const res = yield this.patch(requestUrl, data, additionalHeaders);
           return this._processResponse(res, this.requestOptions);
         });
@@ -23883,1012 +23883,15 @@ var GitHelper = class {
     (0, import_child_process.execSync)(`git fetch origin ${baseBranch} ${headBranch}`);
   }
   getGitDiff(baseBranch, headBranch) {
-    let ignoreFiles = [
+    const defaultIgnoreFiles = [
       ":!**/package-lock.json",
       ":!**/dist/*"
     ];
-    if (this.ignores) {
-      ignoreFiles = this.ignores.split(",").map((item) => `:!${item}`);
-    }
-    console.log("ignoreFiles = ", JSON.stringify(ignoreFiles));
+    const ignoreFiles = this.ignores ? this.ignores.split(",").map((item) => `:!${item.trim()}`) : defaultIgnoreFiles;
     const diffOutput = (0, import_child_process.execSync)(`git diff origin/${baseBranch} origin/${headBranch} -- ${ignoreFiles.join(" ")}`, { encoding: "utf8" });
-    console.log("Filtered diff output:", diffOutput);
     return diffOutput;
   }
 };
-
-// node_modules/@google/generative-ai/dist/index.mjs
-var SchemaType;
-(function(SchemaType2) {
-  SchemaType2["STRING"] = "string";
-  SchemaType2["NUMBER"] = "number";
-  SchemaType2["INTEGER"] = "integer";
-  SchemaType2["BOOLEAN"] = "boolean";
-  SchemaType2["ARRAY"] = "array";
-  SchemaType2["OBJECT"] = "object";
-})(SchemaType || (SchemaType = {}));
-var ExecutableCodeLanguage;
-(function(ExecutableCodeLanguage2) {
-  ExecutableCodeLanguage2["LANGUAGE_UNSPECIFIED"] = "language_unspecified";
-  ExecutableCodeLanguage2["PYTHON"] = "python";
-})(ExecutableCodeLanguage || (ExecutableCodeLanguage = {}));
-var Outcome;
-(function(Outcome2) {
-  Outcome2["OUTCOME_UNSPECIFIED"] = "outcome_unspecified";
-  Outcome2["OUTCOME_OK"] = "outcome_ok";
-  Outcome2["OUTCOME_FAILED"] = "outcome_failed";
-  Outcome2["OUTCOME_DEADLINE_EXCEEDED"] = "outcome_deadline_exceeded";
-})(Outcome || (Outcome = {}));
-var POSSIBLE_ROLES = ["user", "model", "function", "system"];
-var HarmCategory;
-(function(HarmCategory2) {
-  HarmCategory2["HARM_CATEGORY_UNSPECIFIED"] = "HARM_CATEGORY_UNSPECIFIED";
-  HarmCategory2["HARM_CATEGORY_HATE_SPEECH"] = "HARM_CATEGORY_HATE_SPEECH";
-  HarmCategory2["HARM_CATEGORY_SEXUALLY_EXPLICIT"] = "HARM_CATEGORY_SEXUALLY_EXPLICIT";
-  HarmCategory2["HARM_CATEGORY_HARASSMENT"] = "HARM_CATEGORY_HARASSMENT";
-  HarmCategory2["HARM_CATEGORY_DANGEROUS_CONTENT"] = "HARM_CATEGORY_DANGEROUS_CONTENT";
-})(HarmCategory || (HarmCategory = {}));
-var HarmBlockThreshold;
-(function(HarmBlockThreshold2) {
-  HarmBlockThreshold2["HARM_BLOCK_THRESHOLD_UNSPECIFIED"] = "HARM_BLOCK_THRESHOLD_UNSPECIFIED";
-  HarmBlockThreshold2["BLOCK_LOW_AND_ABOVE"] = "BLOCK_LOW_AND_ABOVE";
-  HarmBlockThreshold2["BLOCK_MEDIUM_AND_ABOVE"] = "BLOCK_MEDIUM_AND_ABOVE";
-  HarmBlockThreshold2["BLOCK_ONLY_HIGH"] = "BLOCK_ONLY_HIGH";
-  HarmBlockThreshold2["BLOCK_NONE"] = "BLOCK_NONE";
-})(HarmBlockThreshold || (HarmBlockThreshold = {}));
-var HarmProbability;
-(function(HarmProbability2) {
-  HarmProbability2["HARM_PROBABILITY_UNSPECIFIED"] = "HARM_PROBABILITY_UNSPECIFIED";
-  HarmProbability2["NEGLIGIBLE"] = "NEGLIGIBLE";
-  HarmProbability2["LOW"] = "LOW";
-  HarmProbability2["MEDIUM"] = "MEDIUM";
-  HarmProbability2["HIGH"] = "HIGH";
-})(HarmProbability || (HarmProbability = {}));
-var BlockReason;
-(function(BlockReason2) {
-  BlockReason2["BLOCKED_REASON_UNSPECIFIED"] = "BLOCKED_REASON_UNSPECIFIED";
-  BlockReason2["SAFETY"] = "SAFETY";
-  BlockReason2["OTHER"] = "OTHER";
-})(BlockReason || (BlockReason = {}));
-var FinishReason;
-(function(FinishReason2) {
-  FinishReason2["FINISH_REASON_UNSPECIFIED"] = "FINISH_REASON_UNSPECIFIED";
-  FinishReason2["STOP"] = "STOP";
-  FinishReason2["MAX_TOKENS"] = "MAX_TOKENS";
-  FinishReason2["SAFETY"] = "SAFETY";
-  FinishReason2["RECITATION"] = "RECITATION";
-  FinishReason2["LANGUAGE"] = "LANGUAGE";
-  FinishReason2["OTHER"] = "OTHER";
-})(FinishReason || (FinishReason = {}));
-var TaskType;
-(function(TaskType2) {
-  TaskType2["TASK_TYPE_UNSPECIFIED"] = "TASK_TYPE_UNSPECIFIED";
-  TaskType2["RETRIEVAL_QUERY"] = "RETRIEVAL_QUERY";
-  TaskType2["RETRIEVAL_DOCUMENT"] = "RETRIEVAL_DOCUMENT";
-  TaskType2["SEMANTIC_SIMILARITY"] = "SEMANTIC_SIMILARITY";
-  TaskType2["CLASSIFICATION"] = "CLASSIFICATION";
-  TaskType2["CLUSTERING"] = "CLUSTERING";
-})(TaskType || (TaskType = {}));
-var FunctionCallingMode;
-(function(FunctionCallingMode2) {
-  FunctionCallingMode2["MODE_UNSPECIFIED"] = "MODE_UNSPECIFIED";
-  FunctionCallingMode2["AUTO"] = "AUTO";
-  FunctionCallingMode2["ANY"] = "ANY";
-  FunctionCallingMode2["NONE"] = "NONE";
-})(FunctionCallingMode || (FunctionCallingMode = {}));
-var DynamicRetrievalMode;
-(function(DynamicRetrievalMode2) {
-  DynamicRetrievalMode2["MODE_UNSPECIFIED"] = "MODE_UNSPECIFIED";
-  DynamicRetrievalMode2["MODE_DYNAMIC"] = "MODE_DYNAMIC";
-})(DynamicRetrievalMode || (DynamicRetrievalMode = {}));
-var GoogleGenerativeAIError = class extends Error {
-  constructor(message) {
-    super(`[GoogleGenerativeAI Error]: ${message}`);
-  }
-};
-var GoogleGenerativeAIResponseError = class extends GoogleGenerativeAIError {
-  constructor(message, response) {
-    super(message);
-    this.response = response;
-  }
-};
-var GoogleGenerativeAIFetchError = class extends GoogleGenerativeAIError {
-  constructor(message, status, statusText, errorDetails) {
-    super(message);
-    this.status = status;
-    this.statusText = statusText;
-    this.errorDetails = errorDetails;
-  }
-};
-var GoogleGenerativeAIRequestInputError = class extends GoogleGenerativeAIError {
-};
-var DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com";
-var DEFAULT_API_VERSION = "v1beta";
-var PACKAGE_VERSION = "0.21.0";
-var PACKAGE_LOG_HEADER = "genai-js";
-var Task;
-(function(Task2) {
-  Task2["GENERATE_CONTENT"] = "generateContent";
-  Task2["STREAM_GENERATE_CONTENT"] = "streamGenerateContent";
-  Task2["COUNT_TOKENS"] = "countTokens";
-  Task2["EMBED_CONTENT"] = "embedContent";
-  Task2["BATCH_EMBED_CONTENTS"] = "batchEmbedContents";
-})(Task || (Task = {}));
-var RequestUrl = class {
-  constructor(model, task, apiKey, stream, requestOptions) {
-    this.model = model;
-    this.task = task;
-    this.apiKey = apiKey;
-    this.stream = stream;
-    this.requestOptions = requestOptions;
-  }
-  toString() {
-    var _a, _b;
-    const apiVersion = ((_a = this.requestOptions) === null || _a === void 0 ? void 0 : _a.apiVersion) || DEFAULT_API_VERSION;
-    const baseUrl = ((_b = this.requestOptions) === null || _b === void 0 ? void 0 : _b.baseUrl) || DEFAULT_BASE_URL;
-    let url = `${baseUrl}/${apiVersion}/${this.model}:${this.task}`;
-    if (this.stream) {
-      url += "?alt=sse";
-    }
-    return url;
-  }
-};
-function getClientHeaders(requestOptions) {
-  const clientHeaders = [];
-  if (requestOptions === null || requestOptions === void 0 ? void 0 : requestOptions.apiClient) {
-    clientHeaders.push(requestOptions.apiClient);
-  }
-  clientHeaders.push(`${PACKAGE_LOG_HEADER}/${PACKAGE_VERSION}`);
-  return clientHeaders.join(" ");
-}
-async function getHeaders(url) {
-  var _a;
-  const headers = new Headers();
-  headers.append("Content-Type", "application/json");
-  headers.append("x-goog-api-client", getClientHeaders(url.requestOptions));
-  headers.append("x-goog-api-key", url.apiKey);
-  let customHeaders = (_a = url.requestOptions) === null || _a === void 0 ? void 0 : _a.customHeaders;
-  if (customHeaders) {
-    if (!(customHeaders instanceof Headers)) {
-      try {
-        customHeaders = new Headers(customHeaders);
-      } catch (e) {
-        throw new GoogleGenerativeAIRequestInputError(`unable to convert customHeaders value ${JSON.stringify(customHeaders)} to Headers: ${e.message}`);
-      }
-    }
-    for (const [headerName, headerValue] of customHeaders.entries()) {
-      if (headerName === "x-goog-api-key") {
-        throw new GoogleGenerativeAIRequestInputError(`Cannot set reserved header name ${headerName}`);
-      } else if (headerName === "x-goog-api-client") {
-        throw new GoogleGenerativeAIRequestInputError(`Header name ${headerName} can only be set using the apiClient field`);
-      }
-      headers.append(headerName, headerValue);
-    }
-  }
-  return headers;
-}
-async function constructModelRequest(model, task, apiKey, stream, body, requestOptions) {
-  const url = new RequestUrl(model, task, apiKey, stream, requestOptions);
-  return {
-    url: url.toString(),
-    fetchOptions: Object.assign(Object.assign({}, buildFetchOptions(requestOptions)), { method: "POST", headers: await getHeaders(url), body })
-  };
-}
-async function makeModelRequest(model, task, apiKey, stream, body, requestOptions = {}, fetchFn = fetch) {
-  const { url, fetchOptions } = await constructModelRequest(model, task, apiKey, stream, body, requestOptions);
-  return makeRequest(url, fetchOptions, fetchFn);
-}
-async function makeRequest(url, fetchOptions, fetchFn = fetch) {
-  let response;
-  try {
-    response = await fetchFn(url, fetchOptions);
-  } catch (e) {
-    handleResponseError(e, url);
-  }
-  if (!response.ok) {
-    await handleResponseNotOk(response, url);
-  }
-  return response;
-}
-function handleResponseError(e, url) {
-  let err = e;
-  if (!(e instanceof GoogleGenerativeAIFetchError || e instanceof GoogleGenerativeAIRequestInputError)) {
-    err = new GoogleGenerativeAIError(`Error fetching from ${url.toString()}: ${e.message}`);
-    err.stack = e.stack;
-  }
-  throw err;
-}
-async function handleResponseNotOk(response, url) {
-  let message = "";
-  let errorDetails;
-  try {
-    const json = await response.json();
-    message = json.error.message;
-    if (json.error.details) {
-      message += ` ${JSON.stringify(json.error.details)}`;
-      errorDetails = json.error.details;
-    }
-  } catch (e) {
-  }
-  throw new GoogleGenerativeAIFetchError(`Error fetching from ${url.toString()}: [${response.status} ${response.statusText}] ${message}`, response.status, response.statusText, errorDetails);
-}
-function buildFetchOptions(requestOptions) {
-  const fetchOptions = {};
-  if ((requestOptions === null || requestOptions === void 0 ? void 0 : requestOptions.signal) !== void 0 || (requestOptions === null || requestOptions === void 0 ? void 0 : requestOptions.timeout) >= 0) {
-    const controller = new AbortController();
-    if ((requestOptions === null || requestOptions === void 0 ? void 0 : requestOptions.timeout) >= 0) {
-      setTimeout(() => controller.abort(), requestOptions.timeout);
-    }
-    if (requestOptions === null || requestOptions === void 0 ? void 0 : requestOptions.signal) {
-      requestOptions.signal.addEventListener("abort", () => {
-        controller.abort();
-      });
-    }
-    fetchOptions.signal = controller.signal;
-  }
-  return fetchOptions;
-}
-function addHelpers(response) {
-  response.text = () => {
-    if (response.candidates && response.candidates.length > 0) {
-      if (response.candidates.length > 1) {
-        console.warn(`This response had ${response.candidates.length} candidates. Returning text from the first candidate only. Access response.candidates directly to use the other candidates.`);
-      }
-      if (hadBadFinishReason(response.candidates[0])) {
-        throw new GoogleGenerativeAIResponseError(`${formatBlockErrorMessage(response)}`, response);
-      }
-      return getText(response);
-    } else if (response.promptFeedback) {
-      throw new GoogleGenerativeAIResponseError(`Text not available. ${formatBlockErrorMessage(response)}`, response);
-    }
-    return "";
-  };
-  response.functionCall = () => {
-    if (response.candidates && response.candidates.length > 0) {
-      if (response.candidates.length > 1) {
-        console.warn(`This response had ${response.candidates.length} candidates. Returning function calls from the first candidate only. Access response.candidates directly to use the other candidates.`);
-      }
-      if (hadBadFinishReason(response.candidates[0])) {
-        throw new GoogleGenerativeAIResponseError(`${formatBlockErrorMessage(response)}`, response);
-      }
-      console.warn(`response.functionCall() is deprecated. Use response.functionCalls() instead.`);
-      return getFunctionCalls(response)[0];
-    } else if (response.promptFeedback) {
-      throw new GoogleGenerativeAIResponseError(`Function call not available. ${formatBlockErrorMessage(response)}`, response);
-    }
-    return void 0;
-  };
-  response.functionCalls = () => {
-    if (response.candidates && response.candidates.length > 0) {
-      if (response.candidates.length > 1) {
-        console.warn(`This response had ${response.candidates.length} candidates. Returning function calls from the first candidate only. Access response.candidates directly to use the other candidates.`);
-      }
-      if (hadBadFinishReason(response.candidates[0])) {
-        throw new GoogleGenerativeAIResponseError(`${formatBlockErrorMessage(response)}`, response);
-      }
-      return getFunctionCalls(response);
-    } else if (response.promptFeedback) {
-      throw new GoogleGenerativeAIResponseError(`Function call not available. ${formatBlockErrorMessage(response)}`, response);
-    }
-    return void 0;
-  };
-  return response;
-}
-function getText(response) {
-  var _a, _b, _c, _d;
-  const textStrings = [];
-  if ((_b = (_a = response.candidates) === null || _a === void 0 ? void 0 : _a[0].content) === null || _b === void 0 ? void 0 : _b.parts) {
-    for (const part of (_d = (_c = response.candidates) === null || _c === void 0 ? void 0 : _c[0].content) === null || _d === void 0 ? void 0 : _d.parts) {
-      if (part.text) {
-        textStrings.push(part.text);
-      }
-      if (part.executableCode) {
-        textStrings.push("\n```" + part.executableCode.language + "\n" + part.executableCode.code + "\n```\n");
-      }
-      if (part.codeExecutionResult) {
-        textStrings.push("\n```\n" + part.codeExecutionResult.output + "\n```\n");
-      }
-    }
-  }
-  if (textStrings.length > 0) {
-    return textStrings.join("");
-  } else {
-    return "";
-  }
-}
-function getFunctionCalls(response) {
-  var _a, _b, _c, _d;
-  const functionCalls = [];
-  if ((_b = (_a = response.candidates) === null || _a === void 0 ? void 0 : _a[0].content) === null || _b === void 0 ? void 0 : _b.parts) {
-    for (const part of (_d = (_c = response.candidates) === null || _c === void 0 ? void 0 : _c[0].content) === null || _d === void 0 ? void 0 : _d.parts) {
-      if (part.functionCall) {
-        functionCalls.push(part.functionCall);
-      }
-    }
-  }
-  if (functionCalls.length > 0) {
-    return functionCalls;
-  } else {
-    return void 0;
-  }
-}
-var badFinishReasons = [
-  FinishReason.RECITATION,
-  FinishReason.SAFETY,
-  FinishReason.LANGUAGE
-];
-function hadBadFinishReason(candidate) {
-  return !!candidate.finishReason && badFinishReasons.includes(candidate.finishReason);
-}
-function formatBlockErrorMessage(response) {
-  var _a, _b, _c;
-  let message = "";
-  if ((!response.candidates || response.candidates.length === 0) && response.promptFeedback) {
-    message += "Response was blocked";
-    if ((_a = response.promptFeedback) === null || _a === void 0 ? void 0 : _a.blockReason) {
-      message += ` due to ${response.promptFeedback.blockReason}`;
-    }
-    if ((_b = response.promptFeedback) === null || _b === void 0 ? void 0 : _b.blockReasonMessage) {
-      message += `: ${response.promptFeedback.blockReasonMessage}`;
-    }
-  } else if ((_c = response.candidates) === null || _c === void 0 ? void 0 : _c[0]) {
-    const firstCandidate = response.candidates[0];
-    if (hadBadFinishReason(firstCandidate)) {
-      message += `Candidate was blocked due to ${firstCandidate.finishReason}`;
-      if (firstCandidate.finishMessage) {
-        message += `: ${firstCandidate.finishMessage}`;
-      }
-    }
-  }
-  return message;
-}
-function __await(v) {
-  return this instanceof __await ? (this.v = v, this) : new __await(v);
-}
-function __asyncGenerator(thisArg, _arguments, generator) {
-  if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-  var g = generator.apply(thisArg, _arguments || []), i, q = [];
-  return i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function() {
-    return this;
-  }, i;
-  function verb(n) {
-    if (g[n]) i[n] = function(v) {
-      return new Promise(function(a, b) {
-        q.push([n, v, a, b]) > 1 || resume(n, v);
-      });
-    };
-  }
-  function resume(n, v) {
-    try {
-      step(g[n](v));
-    } catch (e) {
-      settle(q[0][3], e);
-    }
-  }
-  function step(r) {
-    r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r);
-  }
-  function fulfill(value) {
-    resume("next", value);
-  }
-  function reject(value) {
-    resume("throw", value);
-  }
-  function settle(f, v) {
-    if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]);
-  }
-}
-var responseLineRE = /^data\: (.*)(?:\n\n|\r\r|\r\n\r\n)/;
-function processStream(response) {
-  const inputStream = response.body.pipeThrough(new TextDecoderStream("utf8", { fatal: true }));
-  const responseStream = getResponseStream(inputStream);
-  const [stream1, stream2] = responseStream.tee();
-  return {
-    stream: generateResponseSequence(stream1),
-    response: getResponsePromise(stream2)
-  };
-}
-async function getResponsePromise(stream) {
-  const allResponses = [];
-  const reader = stream.getReader();
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      return addHelpers(aggregateResponses(allResponses));
-    }
-    allResponses.push(value);
-  }
-}
-function generateResponseSequence(stream) {
-  return __asyncGenerator(this, arguments, function* generateResponseSequence_1() {
-    const reader = stream.getReader();
-    while (true) {
-      const { value, done } = yield __await(reader.read());
-      if (done) {
-        break;
-      }
-      yield yield __await(addHelpers(value));
-    }
-  });
-}
-function getResponseStream(inputStream) {
-  const reader = inputStream.getReader();
-  const stream = new ReadableStream({
-    start(controller) {
-      let currentText = "";
-      return pump();
-      function pump() {
-        return reader.read().then(({ value, done }) => {
-          if (done) {
-            if (currentText.trim()) {
-              controller.error(new GoogleGenerativeAIError("Failed to parse stream"));
-              return;
-            }
-            controller.close();
-            return;
-          }
-          currentText += value;
-          let match = currentText.match(responseLineRE);
-          let parsedResponse;
-          while (match) {
-            try {
-              parsedResponse = JSON.parse(match[1]);
-            } catch (e) {
-              controller.error(new GoogleGenerativeAIError(`Error parsing JSON response: "${match[1]}"`));
-              return;
-            }
-            controller.enqueue(parsedResponse);
-            currentText = currentText.substring(match[0].length);
-            match = currentText.match(responseLineRE);
-          }
-          return pump();
-        });
-      }
-    }
-  });
-  return stream;
-}
-function aggregateResponses(responses) {
-  const lastResponse = responses[responses.length - 1];
-  const aggregatedResponse = {
-    promptFeedback: lastResponse === null || lastResponse === void 0 ? void 0 : lastResponse.promptFeedback
-  };
-  for (const response of responses) {
-    if (response.candidates) {
-      for (const candidate of response.candidates) {
-        const i = candidate.index;
-        if (!aggregatedResponse.candidates) {
-          aggregatedResponse.candidates = [];
-        }
-        if (!aggregatedResponse.candidates[i]) {
-          aggregatedResponse.candidates[i] = {
-            index: candidate.index
-          };
-        }
-        aggregatedResponse.candidates[i].citationMetadata = candidate.citationMetadata;
-        aggregatedResponse.candidates[i].groundingMetadata = candidate.groundingMetadata;
-        aggregatedResponse.candidates[i].finishReason = candidate.finishReason;
-        aggregatedResponse.candidates[i].finishMessage = candidate.finishMessage;
-        aggregatedResponse.candidates[i].safetyRatings = candidate.safetyRatings;
-        if (candidate.content && candidate.content.parts) {
-          if (!aggregatedResponse.candidates[i].content) {
-            aggregatedResponse.candidates[i].content = {
-              role: candidate.content.role || "user",
-              parts: []
-            };
-          }
-          const newPart = {};
-          for (const part of candidate.content.parts) {
-            if (part.text) {
-              newPart.text = part.text;
-            }
-            if (part.functionCall) {
-              newPart.functionCall = part.functionCall;
-            }
-            if (part.executableCode) {
-              newPart.executableCode = part.executableCode;
-            }
-            if (part.codeExecutionResult) {
-              newPart.codeExecutionResult = part.codeExecutionResult;
-            }
-            if (Object.keys(newPart).length === 0) {
-              newPart.text = "";
-            }
-            aggregatedResponse.candidates[i].content.parts.push(newPart);
-          }
-        }
-      }
-    }
-    if (response.usageMetadata) {
-      aggregatedResponse.usageMetadata = response.usageMetadata;
-    }
-  }
-  return aggregatedResponse;
-}
-async function generateContentStream(apiKey, model, params, requestOptions) {
-  const response = await makeModelRequest(
-    model,
-    Task.STREAM_GENERATE_CONTENT,
-    apiKey,
-    /* stream */
-    true,
-    JSON.stringify(params),
-    requestOptions
-  );
-  return processStream(response);
-}
-async function generateContent(apiKey, model, params, requestOptions) {
-  const response = await makeModelRequest(
-    model,
-    Task.GENERATE_CONTENT,
-    apiKey,
-    /* stream */
-    false,
-    JSON.stringify(params),
-    requestOptions
-  );
-  const responseJson = await response.json();
-  const enhancedResponse = addHelpers(responseJson);
-  return {
-    response: enhancedResponse
-  };
-}
-function formatSystemInstruction(input) {
-  if (input == null) {
-    return void 0;
-  } else if (typeof input === "string") {
-    return { role: "system", parts: [{ text: input }] };
-  } else if (input.text) {
-    return { role: "system", parts: [input] };
-  } else if (input.parts) {
-    if (!input.role) {
-      return { role: "system", parts: input.parts };
-    } else {
-      return input;
-    }
-  }
-}
-function formatNewContent(request) {
-  let newParts = [];
-  if (typeof request === "string") {
-    newParts = [{ text: request }];
-  } else {
-    for (const partOrString of request) {
-      if (typeof partOrString === "string") {
-        newParts.push({ text: partOrString });
-      } else {
-        newParts.push(partOrString);
-      }
-    }
-  }
-  return assignRoleToPartsAndValidateSendMessageRequest(newParts);
-}
-function assignRoleToPartsAndValidateSendMessageRequest(parts) {
-  const userContent = { role: "user", parts: [] };
-  const functionContent = { role: "function", parts: [] };
-  let hasUserContent = false;
-  let hasFunctionContent = false;
-  for (const part of parts) {
-    if ("functionResponse" in part) {
-      functionContent.parts.push(part);
-      hasFunctionContent = true;
-    } else {
-      userContent.parts.push(part);
-      hasUserContent = true;
-    }
-  }
-  if (hasUserContent && hasFunctionContent) {
-    throw new GoogleGenerativeAIError("Within a single message, FunctionResponse cannot be mixed with other type of part in the request for sending chat message.");
-  }
-  if (!hasUserContent && !hasFunctionContent) {
-    throw new GoogleGenerativeAIError("No content is provided for sending chat message.");
-  }
-  if (hasUserContent) {
-    return userContent;
-  }
-  return functionContent;
-}
-function formatCountTokensInput(params, modelParams) {
-  var _a;
-  let formattedGenerateContentRequest = {
-    model: modelParams === null || modelParams === void 0 ? void 0 : modelParams.model,
-    generationConfig: modelParams === null || modelParams === void 0 ? void 0 : modelParams.generationConfig,
-    safetySettings: modelParams === null || modelParams === void 0 ? void 0 : modelParams.safetySettings,
-    tools: modelParams === null || modelParams === void 0 ? void 0 : modelParams.tools,
-    toolConfig: modelParams === null || modelParams === void 0 ? void 0 : modelParams.toolConfig,
-    systemInstruction: modelParams === null || modelParams === void 0 ? void 0 : modelParams.systemInstruction,
-    cachedContent: (_a = modelParams === null || modelParams === void 0 ? void 0 : modelParams.cachedContent) === null || _a === void 0 ? void 0 : _a.name,
-    contents: []
-  };
-  const containsGenerateContentRequest = params.generateContentRequest != null;
-  if (params.contents) {
-    if (containsGenerateContentRequest) {
-      throw new GoogleGenerativeAIRequestInputError("CountTokensRequest must have one of contents or generateContentRequest, not both.");
-    }
-    formattedGenerateContentRequest.contents = params.contents;
-  } else if (containsGenerateContentRequest) {
-    formattedGenerateContentRequest = Object.assign(Object.assign({}, formattedGenerateContentRequest), params.generateContentRequest);
-  } else {
-    const content = formatNewContent(params);
-    formattedGenerateContentRequest.contents = [content];
-  }
-  return { generateContentRequest: formattedGenerateContentRequest };
-}
-function formatGenerateContentInput(params) {
-  let formattedRequest;
-  if (params.contents) {
-    formattedRequest = params;
-  } else {
-    const content = formatNewContent(params);
-    formattedRequest = { contents: [content] };
-  }
-  if (params.systemInstruction) {
-    formattedRequest.systemInstruction = formatSystemInstruction(params.systemInstruction);
-  }
-  return formattedRequest;
-}
-function formatEmbedContentInput(params) {
-  if (typeof params === "string" || Array.isArray(params)) {
-    const content = formatNewContent(params);
-    return { content };
-  }
-  return params;
-}
-var VALID_PART_FIELDS = [
-  "text",
-  "inlineData",
-  "functionCall",
-  "functionResponse",
-  "executableCode",
-  "codeExecutionResult"
-];
-var VALID_PARTS_PER_ROLE = {
-  user: ["text", "inlineData"],
-  function: ["functionResponse"],
-  model: ["text", "functionCall", "executableCode", "codeExecutionResult"],
-  // System instructions shouldn't be in history anyway.
-  system: ["text"]
-};
-function validateChatHistory(history) {
-  let prevContent = false;
-  for (const currContent of history) {
-    const { role, parts } = currContent;
-    if (!prevContent && role !== "user") {
-      throw new GoogleGenerativeAIError(`First content should be with role 'user', got ${role}`);
-    }
-    if (!POSSIBLE_ROLES.includes(role)) {
-      throw new GoogleGenerativeAIError(`Each item should include role field. Got ${role} but valid roles are: ${JSON.stringify(POSSIBLE_ROLES)}`);
-    }
-    if (!Array.isArray(parts)) {
-      throw new GoogleGenerativeAIError("Content should have 'parts' property with an array of Parts");
-    }
-    if (parts.length === 0) {
-      throw new GoogleGenerativeAIError("Each Content should have at least one part");
-    }
-    const countFields = {
-      text: 0,
-      inlineData: 0,
-      functionCall: 0,
-      functionResponse: 0,
-      fileData: 0,
-      executableCode: 0,
-      codeExecutionResult: 0
-    };
-    for (const part of parts) {
-      for (const key of VALID_PART_FIELDS) {
-        if (key in part) {
-          countFields[key] += 1;
-        }
-      }
-    }
-    const validParts = VALID_PARTS_PER_ROLE[role];
-    for (const key of VALID_PART_FIELDS) {
-      if (!validParts.includes(key) && countFields[key] > 0) {
-        throw new GoogleGenerativeAIError(`Content with role '${role}' can't contain '${key}' part`);
-      }
-    }
-    prevContent = true;
-  }
-}
-var SILENT_ERROR = "SILENT_ERROR";
-var ChatSession = class {
-  constructor(apiKey, model, params, _requestOptions = {}) {
-    this.model = model;
-    this.params = params;
-    this._requestOptions = _requestOptions;
-    this._history = [];
-    this._sendPromise = Promise.resolve();
-    this._apiKey = apiKey;
-    if (params === null || params === void 0 ? void 0 : params.history) {
-      validateChatHistory(params.history);
-      this._history = params.history;
-    }
-  }
-  /**
-   * Gets the chat history so far. Blocked prompts are not added to history.
-   * Blocked candidates are not added to history, nor are the prompts that
-   * generated them.
-   */
-  async getHistory() {
-    await this._sendPromise;
-    return this._history;
-  }
-  /**
-   * Sends a chat message and receives a non-streaming
-   * {@link GenerateContentResult}.
-   *
-   * Fields set in the optional {@link SingleRequestOptions} parameter will
-   * take precedence over the {@link RequestOptions} values provided to
-   * {@link GoogleGenerativeAI.getGenerativeModel }.
-   */
-  async sendMessage(request, requestOptions = {}) {
-    var _a, _b, _c, _d, _e, _f;
-    await this._sendPromise;
-    const newContent = formatNewContent(request);
-    const generateContentRequest = {
-      safetySettings: (_a = this.params) === null || _a === void 0 ? void 0 : _a.safetySettings,
-      generationConfig: (_b = this.params) === null || _b === void 0 ? void 0 : _b.generationConfig,
-      tools: (_c = this.params) === null || _c === void 0 ? void 0 : _c.tools,
-      toolConfig: (_d = this.params) === null || _d === void 0 ? void 0 : _d.toolConfig,
-      systemInstruction: (_e = this.params) === null || _e === void 0 ? void 0 : _e.systemInstruction,
-      cachedContent: (_f = this.params) === null || _f === void 0 ? void 0 : _f.cachedContent,
-      contents: [...this._history, newContent]
-    };
-    const chatSessionRequestOptions = Object.assign(Object.assign({}, this._requestOptions), requestOptions);
-    let finalResult;
-    this._sendPromise = this._sendPromise.then(() => generateContent(this._apiKey, this.model, generateContentRequest, chatSessionRequestOptions)).then((result) => {
-      var _a2;
-      if (result.response.candidates && result.response.candidates.length > 0) {
-        this._history.push(newContent);
-        const responseContent = Object.assign({
-          parts: [],
-          // Response seems to come back without a role set.
-          role: "model"
-        }, (_a2 = result.response.candidates) === null || _a2 === void 0 ? void 0 : _a2[0].content);
-        this._history.push(responseContent);
-      } else {
-        const blockErrorMessage = formatBlockErrorMessage(result.response);
-        if (blockErrorMessage) {
-          console.warn(`sendMessage() was unsuccessful. ${blockErrorMessage}. Inspect response object for details.`);
-        }
-      }
-      finalResult = result;
-    });
-    await this._sendPromise;
-    return finalResult;
-  }
-  /**
-   * Sends a chat message and receives the response as a
-   * {@link GenerateContentStreamResult} containing an iterable stream
-   * and a response promise.
-   *
-   * Fields set in the optional {@link SingleRequestOptions} parameter will
-   * take precedence over the {@link RequestOptions} values provided to
-   * {@link GoogleGenerativeAI.getGenerativeModel }.
-   */
-  async sendMessageStream(request, requestOptions = {}) {
-    var _a, _b, _c, _d, _e, _f;
-    await this._sendPromise;
-    const newContent = formatNewContent(request);
-    const generateContentRequest = {
-      safetySettings: (_a = this.params) === null || _a === void 0 ? void 0 : _a.safetySettings,
-      generationConfig: (_b = this.params) === null || _b === void 0 ? void 0 : _b.generationConfig,
-      tools: (_c = this.params) === null || _c === void 0 ? void 0 : _c.tools,
-      toolConfig: (_d = this.params) === null || _d === void 0 ? void 0 : _d.toolConfig,
-      systemInstruction: (_e = this.params) === null || _e === void 0 ? void 0 : _e.systemInstruction,
-      cachedContent: (_f = this.params) === null || _f === void 0 ? void 0 : _f.cachedContent,
-      contents: [...this._history, newContent]
-    };
-    const chatSessionRequestOptions = Object.assign(Object.assign({}, this._requestOptions), requestOptions);
-    const streamPromise = generateContentStream(this._apiKey, this.model, generateContentRequest, chatSessionRequestOptions);
-    this._sendPromise = this._sendPromise.then(() => streamPromise).catch((_ignored) => {
-      throw new Error(SILENT_ERROR);
-    }).then((streamResult) => streamResult.response).then((response) => {
-      if (response.candidates && response.candidates.length > 0) {
-        this._history.push(newContent);
-        const responseContent = Object.assign({}, response.candidates[0].content);
-        if (!responseContent.role) {
-          responseContent.role = "model";
-        }
-        this._history.push(responseContent);
-      } else {
-        const blockErrorMessage = formatBlockErrorMessage(response);
-        if (blockErrorMessage) {
-          console.warn(`sendMessageStream() was unsuccessful. ${blockErrorMessage}. Inspect response object for details.`);
-        }
-      }
-    }).catch((e) => {
-      if (e.message !== SILENT_ERROR) {
-        console.error(e);
-      }
-    });
-    return streamPromise;
-  }
-};
-async function countTokens(apiKey, model, params, singleRequestOptions) {
-  const response = await makeModelRequest(model, Task.COUNT_TOKENS, apiKey, false, JSON.stringify(params), singleRequestOptions);
-  return response.json();
-}
-async function embedContent(apiKey, model, params, requestOptions) {
-  const response = await makeModelRequest(model, Task.EMBED_CONTENT, apiKey, false, JSON.stringify(params), requestOptions);
-  return response.json();
-}
-async function batchEmbedContents(apiKey, model, params, requestOptions) {
-  const requestsWithModel = params.requests.map((request) => {
-    return Object.assign(Object.assign({}, request), { model });
-  });
-  const response = await makeModelRequest(model, Task.BATCH_EMBED_CONTENTS, apiKey, false, JSON.stringify({ requests: requestsWithModel }), requestOptions);
-  return response.json();
-}
-var GenerativeModel = class {
-  constructor(apiKey, modelParams, _requestOptions = {}) {
-    this.apiKey = apiKey;
-    this._requestOptions = _requestOptions;
-    if (modelParams.model.includes("/")) {
-      this.model = modelParams.model;
-    } else {
-      this.model = `models/${modelParams.model}`;
-    }
-    this.generationConfig = modelParams.generationConfig || {};
-    this.safetySettings = modelParams.safetySettings || [];
-    this.tools = modelParams.tools;
-    this.toolConfig = modelParams.toolConfig;
-    this.systemInstruction = formatSystemInstruction(modelParams.systemInstruction);
-    this.cachedContent = modelParams.cachedContent;
-  }
-  /**
-   * Makes a single non-streaming call to the model
-   * and returns an object containing a single {@link GenerateContentResponse}.
-   *
-   * Fields set in the optional {@link SingleRequestOptions} parameter will
-   * take precedence over the {@link RequestOptions} values provided to
-   * {@link GoogleGenerativeAI.getGenerativeModel }.
-   */
-  async generateContent(request, requestOptions = {}) {
-    var _a;
-    const formattedParams = formatGenerateContentInput(request);
-    const generativeModelRequestOptions = Object.assign(Object.assign({}, this._requestOptions), requestOptions);
-    return generateContent(this.apiKey, this.model, Object.assign({ generationConfig: this.generationConfig, safetySettings: this.safetySettings, tools: this.tools, toolConfig: this.toolConfig, systemInstruction: this.systemInstruction, cachedContent: (_a = this.cachedContent) === null || _a === void 0 ? void 0 : _a.name }, formattedParams), generativeModelRequestOptions);
-  }
-  /**
-   * Makes a single streaming call to the model and returns an object
-   * containing an iterable stream that iterates over all chunks in the
-   * streaming response as well as a promise that returns the final
-   * aggregated response.
-   *
-   * Fields set in the optional {@link SingleRequestOptions} parameter will
-   * take precedence over the {@link RequestOptions} values provided to
-   * {@link GoogleGenerativeAI.getGenerativeModel }.
-   */
-  async generateContentStream(request, requestOptions = {}) {
-    var _a;
-    const formattedParams = formatGenerateContentInput(request);
-    const generativeModelRequestOptions = Object.assign(Object.assign({}, this._requestOptions), requestOptions);
-    return generateContentStream(this.apiKey, this.model, Object.assign({ generationConfig: this.generationConfig, safetySettings: this.safetySettings, tools: this.tools, toolConfig: this.toolConfig, systemInstruction: this.systemInstruction, cachedContent: (_a = this.cachedContent) === null || _a === void 0 ? void 0 : _a.name }, formattedParams), generativeModelRequestOptions);
-  }
-  /**
-   * Gets a new {@link ChatSession} instance which can be used for
-   * multi-turn chats.
-   */
-  startChat(startChatParams) {
-    var _a;
-    return new ChatSession(this.apiKey, this.model, Object.assign({ generationConfig: this.generationConfig, safetySettings: this.safetySettings, tools: this.tools, toolConfig: this.toolConfig, systemInstruction: this.systemInstruction, cachedContent: (_a = this.cachedContent) === null || _a === void 0 ? void 0 : _a.name }, startChatParams), this._requestOptions);
-  }
-  /**
-   * Counts the tokens in the provided request.
-   *
-   * Fields set in the optional {@link SingleRequestOptions} parameter will
-   * take precedence over the {@link RequestOptions} values provided to
-   * {@link GoogleGenerativeAI.getGenerativeModel }.
-   */
-  async countTokens(request, requestOptions = {}) {
-    const formattedParams = formatCountTokensInput(request, {
-      model: this.model,
-      generationConfig: this.generationConfig,
-      safetySettings: this.safetySettings,
-      tools: this.tools,
-      toolConfig: this.toolConfig,
-      systemInstruction: this.systemInstruction,
-      cachedContent: this.cachedContent
-    });
-    const generativeModelRequestOptions = Object.assign(Object.assign({}, this._requestOptions), requestOptions);
-    return countTokens(this.apiKey, this.model, formattedParams, generativeModelRequestOptions);
-  }
-  /**
-   * Embeds the provided content.
-   *
-   * Fields set in the optional {@link SingleRequestOptions} parameter will
-   * take precedence over the {@link RequestOptions} values provided to
-   * {@link GoogleGenerativeAI.getGenerativeModel }.
-   */
-  async embedContent(request, requestOptions = {}) {
-    const formattedParams = formatEmbedContentInput(request);
-    const generativeModelRequestOptions = Object.assign(Object.assign({}, this._requestOptions), requestOptions);
-    return embedContent(this.apiKey, this.model, formattedParams, generativeModelRequestOptions);
-  }
-  /**
-   * Embeds an array of {@link EmbedContentRequest}s.
-   *
-   * Fields set in the optional {@link SingleRequestOptions} parameter will
-   * take precedence over the {@link RequestOptions} values provided to
-   * {@link GoogleGenerativeAI.getGenerativeModel }.
-   */
-  async batchEmbedContents(batchEmbedContentRequest, requestOptions = {}) {
-    const generativeModelRequestOptions = Object.assign(Object.assign({}, this._requestOptions), requestOptions);
-    return batchEmbedContents(this.apiKey, this.model, batchEmbedContentRequest, generativeModelRequestOptions);
-  }
-};
-var GoogleGenerativeAI = class {
-  constructor(apiKey) {
-    this.apiKey = apiKey;
-  }
-  /**
-   * Gets a {@link GenerativeModel} instance for the provided model name.
-   */
-  getGenerativeModel(modelParams, requestOptions) {
-    if (!modelParams.model) {
-      throw new GoogleGenerativeAIError(`Must provide a model name. Example: genai.getGenerativeModel({ model: 'my-model-name' })`);
-    }
-    return new GenerativeModel(this.apiKey, modelParams, requestOptions);
-  }
-  /**
-   * Creates a {@link GenerativeModel} instance from provided content cache.
-   */
-  getGenerativeModelFromCachedContent(cachedContent, modelParams, requestOptions) {
-    if (!cachedContent.name) {
-      throw new GoogleGenerativeAIRequestInputError("Cached content must contain a `name` field.");
-    }
-    if (!cachedContent.model) {
-      throw new GoogleGenerativeAIRequestInputError("Cached content must contain a `model` field.");
-    }
-    const disallowedDuplicates = ["model", "systemInstruction"];
-    for (const key of disallowedDuplicates) {
-      if ((modelParams === null || modelParams === void 0 ? void 0 : modelParams[key]) && cachedContent[key] && (modelParams === null || modelParams === void 0 ? void 0 : modelParams[key]) !== cachedContent[key]) {
-        if (key === "model") {
-          const modelParamsComp = modelParams.model.startsWith("models/") ? modelParams.model.replace("models/", "") : modelParams.model;
-          const cachedContentComp = cachedContent.model.startsWith("models/") ? cachedContent.model.replace("models/", "") : cachedContent.model;
-          if (modelParamsComp === cachedContentComp) {
-            continue;
-          }
-        }
-        throw new GoogleGenerativeAIRequestInputError(`Different value for "${key}" specified in modelParams (${modelParams[key]}) and cachedContent (${cachedContent[key]})`);
-      }
-    }
-    const modelParamsFromCache = Object.assign(Object.assign({}, modelParams), { model: cachedContent.model, tools: cachedContent.tools, toolConfig: cachedContent.toolConfig, systemInstruction: cachedContent.systemInstruction, cachedContent });
-    return new GenerativeModel(this.apiKey, modelParamsFromCache, requestOptions);
-  }
-};
-
-// src/ai/gemini-ai-helper.ts
-var GeminiAIHelper = class {
-  apiKey;
-  temperature;
-  constructor(aiHelperParams) {
-    Object.assign(this, aiHelperParams);
-  }
-  async createPullRequestDescription(diffOutput, prompt) {
-    try {
-      console.log("call gemini Ai");
-      const genAI = new GoogleGenerativeAI(this.apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-      const result = await model.generateContent({
-        contents: [
-          { role: "user", parts: [{ text: prompt }] },
-          { role: "assistant", parts: [{ text: "You are very good at reviewing code and can generate pull request descriptions" }] }
-        ],
-        generationConfig: {
-          temperature: this.temperature,
-          maxOutputTokens: 1024
-        }
-      });
-      const response = result.response;
-      return response.text();
-    } catch (error) {
-      throw new Error(`Gemini API Error: ${error.message}`);
-    }
-  }
-};
-var gemini_ai_helper_default = GeminiAIHelper;
 
 // src/ai/open-ai-helper.ts
 var OpenAIHelper = class {
@@ -24899,7 +23902,6 @@ var OpenAIHelper = class {
   }
   async createPullRequestDescription(diffOutput, prompt) {
     try {
-      console.log("call open ai");
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -24911,7 +23913,7 @@ var OpenAIHelper = class {
           messages: [
             {
               role: "system",
-              content: "You are a super assistant, very good at reviewing code, and can generate the best pull request descriptions."
+              content: "You are a super assistant, very good at reviewing code, and can generate the best pull request descriptions for engineers."
             },
             {
               role: "user",
@@ -24929,7 +23931,7 @@ var OpenAIHelper = class {
       const description = data.choices[0].message.content.trim();
       return description;
     } catch (error) {
-      throw new Error(`OenAi API Error: ${error.message}`);
+      throw new Error(`OpenAi API Error: ${error.message}`);
     }
   }
 };
@@ -24941,9 +23943,8 @@ var aiHelperResolver = (aiHelperParams) => {
   switch (aiName) {
     case "open-ai":
       return new open_ai_helper_default(aiHelperParams);
-    case "gemini":
     default:
-      return new gemini_ai_helper_default(aiHelperParams);
+      throw new Error(`AI Helper ${aiName} not found`);
   }
 };
 var ai_helper_resolver_default = aiHelperResolver;
@@ -24965,53 +23966,85 @@ var PullRequestUpdater = class {
     const githubToken = (0, import_core.getInput)("github_token", { required: true });
     this.octokit = (0, import_github.getOctokit)(githubToken);
   }
-  generatePrompt(diffOutput, creator) {
+  generatePrompt(diffOutput) {
     return `Instructions:
-Please generate a Pull Request description for the provided diff, following these guidelines:
-- Add a subtitle "## What this PR do?" to the first line.
-- Format your answer in Markdown.
-- Do not include the title of the PR. e.g. "feat: xxx" "fix: xxx" "Refactor: xxx".
-- Do not include the diff in the PR description.
-- Describe the changes simply in the PR.
-- Do not include any code snippets or images.
-- Please add some emojis to make it more fun! Emojis only contain the following: \u{1F680}\u{1F389}\u{1F44D}\u{1F44F}\u{1F525}. List the changes using numbers, each list should only have 0 or 1 emoji. 
-  e.g. 1. Added a new feature\u{1F44F}, 2. Fixed a bug\u{1F44D}, 3. Made a big change for preact\u{1F680} etc. But do not exceed 3 emojis in your list!!!
-- 
-- Thanks to **${creator}** for the contribution! \u{1F389}
-
-Diff:
-${diffOutput}`;
+  Generate a Pull Request description in the following Markdown format based on the provided diff:
+  
+  ### Description
+  
+  <!-- Describe your changes in detail -->
+  
+  #### Type of change
+  
+  <!-- Check all that apply -->
+  <!-- "New feature" should include upgrading packages in our base Python image (follow instructions here: https://www.notion.so/hexhq/Bumping-Python-Packages-dad4c9efd9654f5d9f1c3cf38d73e896) -->
+  
+  - [ ] Bug fix <!-- change that fixes an issue -->
+  - [ ] UI Polish <!-- change that polishes/enhances UI -->
+  - [ ] New feature <!-- change that adds functionality -->
+  - [ ] Refactor <!-- behind-the-scenes code changes with no user-facing changes -->
+  - [ ] Non-product change <!-- documentation updates, change that only affects tests, etc. -->
+  - [ ] Breaking <!-- fix or feature that would cause existing functionality to not work as expected -->
+  
+  #### Related
+  
+  - Fixes: {Issue ID} <!-- issue will automatically be closed on merge -->
+  - References: {Issue ID} <!-- issue will only be linked, not closed -->
+  
+  <!-- List out any links, issues, or PRs here that provide additional context -->
+  <!-- If this PR fixes multiple issues, list them here -->
+  <!-- Replace '{Issue ID}' with the appropriate issue ID from Linear -->
+  
+  ### Screenshots
+  
+  <!-- Should be included for any UI/UX changes, otherwise remove this section -->
+  
+  ### Testing
+  
+  <!-- Describe your test cases or why this doesn't require testing (e.g. already covered by tests) -->
+  
+  <details>
+  <summary><h3>CR checklist</h3></summary>
+  
+  By approving this PR, I have verified the following:
+  
+  - Correctness: Does this PR correctly implement the described change? Are there any unintended effects?
+  - Code style: is this consistent with the rest of the codebase?
+  - Security: Are there any security implications of this change, e.g. [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+  - Infrastructure: Does this change have any security implications for the infrastructure, e.g. networking changes
+  </details>
+  
+  Diff:
+  ${diffOutput}`;
   }
   async run() {
     try {
       this.validateEventContext();
       const pullRequestNumber = this.context.payload.pull_request.number;
-      const creator = this.context.payload.pull_request.user.login;
       const { baseBranch, headBranch } = this.extractBranchRefs();
       this.gitHelper.setupGitConfiguration();
-      this.gitHelper.fetchGitBranches(baseBranch, headBranch);
+      await this.gitHelper.fetchGitBranches(baseBranch, headBranch);
       const diffOutput = this.gitHelper.getGitDiff(baseBranch, headBranch);
-      const prompt = this.generatePrompt(diffOutput, creator);
+      const prompt = this.generatePrompt(diffOutput);
       const generatedDescription = await this.aiHelper.createPullRequestDescription(diffOutput, prompt);
       await this.updatePullRequestDescription(pullRequestNumber, generatedDescription);
       (0, import_core.setOutput)("pr_number", pullRequestNumber.toString());
       (0, import_core.setOutput)("description", generatedDescription);
-      console.log(`Successfully updated PR #${pullRequestNumber} description.`);
     } catch (error) {
-      (0, import_core.setFailed)(error instanceof Error ? error.message : "Unknown error");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      (0, import_core.setFailed)(errorMessage);
+      console.error(`Error updating PR: ${errorMessage}`);
     }
   }
   validateEventContext() {
     if (this.context.eventName !== "pull_request") {
-      (0, import_core.setFailed)("This action only runs on pull_request events.");
+      (0, import_core.setFailed)("This action should only runs on pull_request events.");
       throw new Error("Invalid event context");
     }
   }
   extractBranchRefs() {
     const baseBranch = this.context.payload.pull_request.base.ref;
     const headBranch = this.context.payload.pull_request.head.ref;
-    console.log(`Base branch: ${baseBranch}`);
-    console.log(`Head branch: ${headBranch}`);
     return { baseBranch, headBranch };
   }
   async updatePullRequestDescription(pullRequestNumber, generatedDescription) {
@@ -25023,10 +24056,11 @@ ${diffOutput}`;
       }
       await this.applyPullRequestUpdate(pullRequestNumber, generatedDescription);
     } catch (error) {
-      console.error("Error in updatePullRequestDescription:", error);
+      console.error(`Error updating PR #${pullRequestNumber} description:`, error);
       throw error;
     }
   }
+  \u00CF;
   async fetchPullRequestDetails(pullRequestNumber) {
     const { data } = await this.octokit.rest.pulls.get({
       owner: this.context.repo.owner,
@@ -25039,7 +24073,6 @@ ${diffOutput}`;
     return this.context.payload.pull_request.head.ref.replace("feat/", "").replace("fix/", "");
   }
   async postOriginalDescriptionComment(pullRequestNumber, currentDescription) {
-    console.log("Creating comment with original description...");
     await this.octokit.rest.issues.createComment({
       owner: this.context.repo.owner,
       repo: this.context.repo.repo,
@@ -25048,17 +24081,14 @@ ${diffOutput}`;
 
 ${currentDescription}`
     });
-    console.log("Comment created successfully.");
   }
   async applyPullRequestUpdate(pullRequestNumber, newDescription) {
-    console.log("Updating PR description...");
     await this.octokit.rest.pulls.update({
       owner: this.context.repo.owner,
       repo: this.context.repo.repo,
       pull_number: pullRequestNumber,
       body: newDescription
     });
-    console.log("PR description updated successfully.");
   }
 };
 var pull_request_updater_default = PullRequestUpdater;
@@ -25073,40 +24103,4 @@ undici/lib/fetch/body.js:
 
 undici/lib/websocket/frame.js:
   (*! ws. MIT License. Einar Otto Stangvik <einaros@gmail.com> *)
-
-@google/generative-ai/dist/index.mjs:
-  (**
-   * @license
-   * Copyright 2024 Google LLC
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *   http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   *)
-
-@google/generative-ai/dist/index.mjs:
-  (**
-   * @license
-   * Copyright 2024 Google LLC
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *   http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   *)
 */

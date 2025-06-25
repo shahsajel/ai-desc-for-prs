@@ -6,11 +6,11 @@ runs:
   main: './dist/bundle.js'
 inputs:
   ai_name:
-    description: 'The name of AI, currently just supports gemini, open-ai'
+    description: 'The name of AI, currently just supports open-ai'
     required: true
-    default: 'gemini'
+    default: 'open-ai'
   api_key:
-    description: 'API key for authenticating with Google Gemini service. Ensure it has the necessary permissions for generating content.'
+    description: 'API key for authenticating with OpenAI service. Ensure it has the necessary permissions for generating content.'
     required: true
   github_token:
     description: 'GitHub token with repository permissions to access and modify pull requests. Make sure it has at least read and write access to pull requests.'

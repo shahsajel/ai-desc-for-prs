@@ -18,7 +18,7 @@ Automatically generates descriptive summaries for pull requests using AI, enhanc
 ## Features
 
 - Automatically generates descriptions for pull requests.
-- Supports multiple AI models (e.g., Gemini, OpenAI).
+- Supports OpenAI for intelligent PR description generation.
 - Integrates seamlessly with GitHub workflows.
 - Executes on pull request creation and commit push events.
 - Written in TypeScript for type safety and maintainability.
@@ -47,10 +47,9 @@ To get started with the AI-Powered PR Description Generator, follow the instruct
    ```
    
 ## Configuration
-Before using the generator, you need to configure the following secrets in your GitHub repository settings(https://github.com/your-repo/settings/secrets/actions):
+Before using the generator, you need to configure the following secret in your GitHub repository settings(https://github.com/your-repo/settings/secrets/actions):
 
-- GEMINI_API_KEY: Your API key for the Gemini model.
-- OPENAI_API_KEY: Your API key for the OpenAI model (if applicable).
+- OPENAI_API_KEY: Your API key for the OpenAI model.
 
 GITHUB_TOKEN should be required (https://github.com/settings/tokens), it needs permission to modify the pull request.
 
@@ -61,12 +60,48 @@ Once configured, the action will automatically execute whenever a pull request i
 ## GitHub Workflow
 Here's an example of how to set up your GitHub Actions workflow file (.github/workflows/description-generator.yml):
 
-## Supported AI Models
-The project currently supports the following AI models for generating descriptions:
+```yaml
+name: AI-Powered PR Description Generator
 
-- Gemini: An AI model that provides concise and relevant descriptions for pull requests.
-- OpenAI: A more advanced AI model that can generate detailed and nuanced descriptions.
-You can configure which AI model to use in your workflow settings.
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  generate-pr-description:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate PR Description
+        uses: ./
+        with:
+          ai_name: 'open-ai'
+          api_key: ${{ secrets.OPENAI_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          temperature: 0.7  # Optional: default is 0.7
+```
+
+## Building the Project
+To build the project for distribution:
+
+```bash
+npm run build
+```
+
+## Supported AI Models
+The project currently supports OpenAI for generating descriptions:
+
+- **OpenAI**: Uses GPT-4o model to generate detailed and nuanced pull request descriptions.
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a pull request or open an issue for any enhancements or bug fixes.

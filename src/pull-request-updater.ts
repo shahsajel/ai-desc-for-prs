@@ -24,11 +24,14 @@ class PullRequestUpdater {
 
   private generatePrompt(diffOutput: string): string {
     return `Instructions:
-  Generate a Pull Request description in the following Markdown format based on the provided diff:
+  Generate a Pull Request description in the following Markdown format based on the provided diff. Only generate the description, no other text.:
   
   ### Description
   
-  <!-- Describe your changes in detail -->
+  <!-- Describe changes based on the diff in detail -->
+  
+  Diff:
+  ${diffOutput}
   
   #### Type of change
   
@@ -69,9 +72,7 @@ class PullRequestUpdater {
   - Security: Are there any security implications of this change, e.g. [OWASP Top 10](https://owasp.org/www-project-top-ten/)
   - Infrastructure: Does this change have any security implications for the infrastructure, e.g. networking changes
   </details>
-  
-  Diff:
-  ${diffOutput}`;
+`;
   }
   
 

@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - master
 
 jobs:
   generate-pr-description:
@@ -26,4 +27,3 @@ jobs:
           api_key: ${{ secrets.OPEN_AI_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           temperature: 0.7  # Optional: default is 0.7
-          use_jira: 'false'
