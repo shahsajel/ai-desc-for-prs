@@ -23882,15 +23882,38 @@ var GitHelper = class {
   fetchGitBranches(baseBranch, headBranch) {
     (0, import_child_process.execSync)(`git fetch origin ${baseBranch} ${headBranch}`);
   }
-  getGitDiff(baseBranch, headBranch) {
+  getGitDiff(baseBranch, headBranch, eventAction) {
     const defaultIgnoreFiles = [
       ":!**/package-lock.json",
       ":!**/dist/*"
     ];
     const ignoreFiles = this.ignores ? this.ignores.split(",").map((item) => `:!${item.trim()}`) : defaultIgnoreFiles;
-    console.log("Getting diff for changed files (new + modified)...");
-    const diffOutput = (0, import_child_process.execSync)(`git diff origin/${baseBranch} origin/${headBranch} -- ${ignoreFiles.join(" ")}`, { encoding: "utf8" });
-    console.log("Diff output:", diffOutput ? "Found changed files" : "No changes detected");
+    console.log(`Getting diff for ${eventAction || "unknown"} event...`);
+    console.log("Ignore patterns:", ignoreFiles);
+    let diffCommand = "";
+    if (eventAction === "synchronize") {
+      console.log("Synchronize event: Getting diff for recent commits only");
+      diffCommand = `git diff HEAD~1..HEAD -- ${ignoreFiles.join(" ")}`;
+      try {
+        const recentCommits = (0, import_child_process.execSync)(`git log --oneline -3`, { encoding: "utf8" });
+        console.log("Recent commits:", recentCommits.trim());
+      } catch (error) {
+        console.log("Could not get recent commits:", error);
+      }
+    } else {
+      console.log("Opened event: Getting full branch diff");
+      diffCommand = `git diff origin/${baseBranch} origin/${headBranch} -- ${ignoreFiles.join(" ")}`;
+    }
+    try {
+      const fileCommand = eventAction === "synchronize" ? `git diff --name-only HEAD~1..HEAD` : `git diff --name-only origin/${baseBranch} origin/${headBranch}`;
+      const filesChanged = (0, import_child_process.execSync)(fileCommand, { encoding: "utf8" });
+      console.log("Changed files:", filesChanged.split("\n").filter((f) => f.trim()));
+    } catch (error) {
+      console.log("Could not get file list:", error);
+    }
+    const diffOutput = (0, import_child_process.execSync)(diffCommand, { encoding: "utf8" });
+    const lineCount = diffOutput.split("\n").length;
+    console.log(`Diff output: ${diffOutput ? `Found changed files (${lineCount} lines)` : "No changes detected"}`);
     return diffOutput;
   }
 };
@@ -23971,56 +23994,55 @@ var PullRequestUpdater = class {
   }
   generatePrompt(diffOutput) {
     return `Instructions:
-Generate a Pull Request description in the following Markdown format based on the provided diff. IMPORTANT: Follow the exact markdown format below, including the ### headers:
-
-### Description
-
-<!-- Describe changes based on the diff in detail -->
-
-Diff:
-${diffOutput}
-
-#### Type of change
-
-<!-- Check all that apply -->
-<!-- "New feature" should include upgrading packages in our base Python image (follow instructions here: https://www.notion.so/hexhq/Bumping-Python-Packages-dad4c9efd9654f5d9f1c3cf38d73e896) -->
-
-- [ ] Bug fix <!-- change that fixes an issue -->
-- [ ] UI Polish <!-- change that polishes/enhances UI -->
-- [ ] New feature <!-- change that adds functionality -->
-- [ ] Refactor <!-- behind-the-scenes code changes with no user-facing changes -->
-- [ ] Non-product change <!-- documentation updates, change that only affects tests, etc. -->
-- [ ] Breaking <!-- fix or feature that would cause existing functionality to not work as expected -->
-
-#### Related
-
-- Fixes: {Issue ID} <!-- issue will automatically be closed on merge -->
-- References: {Issue ID} <!-- issue will only be linked, not closed -->
-
-<!-- List out any links, issues, or PRs here that provide additional context -->
-<!-- If this PR fixes multiple issues, list them here -->
-<!-- Replace '{Issue ID}' with the appropriate issue ID from Linear -->
-
-### Screenshots
-
-<!-- Should be included for any UI/UX changes, otherwise remove this section -->
-
-### Testing
-
-<!-- Describe your test cases or why this doesn't require testing (e.g. already covered by tests) -->
-
-<details>
-<summary><h3>CR checklist</h3></summary>
-
-By approving this PR, I have verified the following:
-
-- Correctness: Does this PR correctly implement the described change? Are there any unintended effects?
-- Code style: is this consistent with the rest of the codebase?
-- Security: Are there any security implications of this change, e.g. [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- Infrastructure: Does this change have any security implications for the infrastructure, e.g. networking changes
-</details>
-
-IMPORTANT: Start your response with exactly "### Description" (with three hashes) and follow the markdown structure above.`;
+  Generate a Pull Request description in the following Markdown format based on the provided diff. Only generate the description, no other text.:
+  
+  ### Description
+  
+  <!-- Describe changes based on the diff in detail -->
+  
+  Diff:
+  ${diffOutput}
+  
+  #### Type of change
+  
+  <!-- Check all that apply -->
+  <!-- "New feature" should include upgrading packages in our base Python image (follow instructions here: https://www.notion.so/hexhq/Bumping-Python-Packages-dad4c9efd9654f5d9f1c3cf38d73e896) -->
+  
+  - [ ] Bug fix <!-- change that fixes an issue -->
+  - [ ] UI Polish <!-- change that polishes/enhances UI -->
+  - [ ] New feature <!-- change that adds functionality -->
+  - [ ] Refactor <!-- behind-the-scenes code changes with no user-facing changes -->
+  - [ ] Non-product change <!-- documentation updates, change that only affects tests, etc. -->
+  - [ ] Breaking <!-- fix or feature that would cause existing functionality to not work as expected -->
+  
+  #### Related
+  
+  - Fixes: {Issue ID} <!-- issue will automatically be closed on merge -->
+  - References: {Issue ID} <!-- issue will only be linked, not closed -->
+  
+  <!-- List out any links, issues, or PRs here that provide additional context -->
+  <!-- If this PR fixes multiple issues, list them here -->
+  <!-- Replace '{Issue ID}' with the appropriate issue ID from Linear -->
+  
+  ### Screenshots
+  
+  <!-- Should be included for any UI/UX changes, otherwise remove this section -->
+  
+  ### Testing
+  
+  <!-- Describe your test cases or why this doesn't require testing (e.g. already covered by tests) -->
+  
+  <details>
+  <summary><h3>CR checklist</h3></summary>
+  
+  By approving this PR, I have verified the following:
+  
+  - Correctness: Does this PR correctly implement the described change? Are there any unintended effects?
+  - Code style: is this consistent with the rest of the codebase?
+  - Security: Are there any security implications of this change, e.g. [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+  - Infrastructure: Does this change have any security implications for the infrastructure, e.g. networking changes
+  </details>
+`;
   }
   analyzeChangesSignificance(diffOutput) {
     const lines = diffOutput.split("\n");
@@ -24063,7 +24085,7 @@ IMPORTANT: Start your response with exactly "### Description" (with three hashes
       console.log(`PR #${pullRequestNumber} - Event: ${eventAction}`);
       this.gitHelper.setupGitConfiguration();
       await this.gitHelper.fetchGitBranches(baseBranch, headBranch);
-      const diffOutput = this.gitHelper.getGitDiff(baseBranch, headBranch);
+      const diffOutput = this.gitHelper.getGitDiff(baseBranch, headBranch, eventAction);
       if (eventAction === "synchronize") {
         const { isSignificant, reason } = this.analyzeChangesSignificance(diffOutput);
         console.log(`Change analysis: ${reason}`);
@@ -24128,13 +24150,17 @@ IMPORTANT: Start your response with exactly "### Description" (with three hashes
         repo: this.context.repo.repo,
         issue_number: pullRequestNumber
       });
+      console.log(`Found ${comments.length} total comments on PR #${pullRequestNumber}`);
+      comments.forEach((comment, index) => {
+        const preview = comment.body?.substring(0, 100).replace(/\n/g, " ") || "No body";
+        console.log(`Comment ${index + 1}: User: ${comment.user?.login}, Preview: "${preview}..."`);
+      });
       const botComment = comments.find((comment) => {
         if (!comment.body) return false;
         const body = comment.body.trim();
-        const hasDescriptionHeader = body.includes("### Description") || body.startsWith("Description\n");
-        const isFromBot = comment.user?.login === "github-actions[bot]" || comment.user?.type === "Bot";
+        const hasDescriptionHeader = body.includes("### Description") || body.startsWith("Description\n") || body.startsWith("Description");
         const hasTypicalStructure = body.includes("This pull request") || body.includes("Type of change") || body.includes("### Testing");
-        return (hasDescriptionHeader || isFromBot) && hasTypicalStructure;
+        return hasDescriptionHeader && hasTypicalStructure;
       });
       if (botComment) {
         console.log(`Found existing bot comment #${botComment.id}`);
