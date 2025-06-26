@@ -25,11 +25,28 @@ class PullRequestUpdater {
 
   private generatePrompt(diffOutput: string): string {
     return `Instructions:
-  Generate a Pull Request description in the following Markdown format based on the provided diff. Only generate the description, no other text.:
+  Generate a Pull Request description in the following Markdown format based on the provided diff. 
   
+  Here are some examples of the tone you should use and the description you should generate:
+  - Tone: Professional, technical, and concise
+  - Description: A clear and concise description of the changes made in the pull request.
+  - Example:
+  Adds new logic in common for calculating compressed uuids with sanitized titles that are safe for urls.
+  Changes :hexId in all our server and clientside selectors to now be :hexLocator which is a union of HexId and HumanHexId since we now can support both.
+  Updates only the Projectroutes and UserRoutes to automatically rewrite the page URL without refresh if the url is outdated or title is changed. 
+  Does not change any in-app links to use the new format, so the URL will briefly flicker before it self-updates based on redux state.
+  A future PR will add helper functions to automatically use human urls anywhere a url hotlink needs to be created.
+  - Example:
+  Wrote a helper function to automatically handle keep repeatable bull jobs in sync. Repeatable bull jobs are actually very dumb, and i'm disliking bull more over time. You can have multiple jobs for the same ID with different cron, so any time we changed the cron it would just add an additional job and not remove the old one. We already had code to do that for backfill jobs, but just extended it everywhere.
+  Also updated the hex deletion job to run at 3am instead of 7pm, so its very unlikely to conflict with late night releases for now etc.
+  - Example:
+  This is done very shallowly for first attempt, there are many many more places we need to add a fork for emitting.
+  Does not limit concurrency or have telemetry. I figure we can add those once we get further down this path.
+  
+  Here is the format you should use. Only generate the description and insert it into the <!-- Insert the description here --> section.
   ### Description
   
-  <!-- Describe changes based on the diff in detail -->
+  <!-- Insert the description here -->
   
   Diff:
   ${diffOutput}

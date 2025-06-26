@@ -17,7 +17,7 @@ class OpenAIHelper implements AIHelperInterface {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'gpt-4o',
+              model: 'o4-mini-2025-04-16',
               messages: [
                 {
                   role: 'system',

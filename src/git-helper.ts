@@ -20,7 +20,9 @@ export class GitHelper {
       // The list of files to ignore to send to AI API
       const defaultIgnoreFiles = [
           ':!**/package-lock.json',
-          ':!**/dist/*',       
+          ':!**/dist/*',
+          ':!**/.github/*',
+          ':!**/.gitignore',
       ];
   
       const ignoreFiles = this.ignores 
