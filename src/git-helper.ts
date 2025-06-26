@@ -38,14 +38,28 @@ export class GitHelper {
         // For synchronize events, only look at the new commits (not the entire branch)
         console.log('Synchronize event: Getting diff for recent commits only');
         
-        // Get the diff for just the latest commit(s) - typically the new changes
-        diffCommand = `git diff HEAD~1..HEAD -- ${ignoreFiles.join(' ')}`;
-        
         try {
           const recentCommits = execSync(`git log --oneline -3`, { encoding: 'utf8' });
           console.log('Recent commits:', recentCommits.trim());
+          
+          // Check if the latest commit is a merge commit
+          const parentCount = execSync(`git rev-list --count --parents HEAD^..HEAD`, { encoding: 'utf8' }).trim();
+          const parents = execSync(`git rev-list --parents -n 1 HEAD`, { encoding: 'utf8' }).trim().split(' ');
+          
+          console.log(`Parent count: ${parentCount}, Parents: ${parents.length - 1}`);
+          
+          if (parents.length > 2) {
+            // This is a merge commit - use git show to see only what the merge introduced
+            console.log('Merge commit detected: Using git show HEAD');
+            diffCommand = `git show HEAD --format="" -- ${ignoreFiles.join(' ')}`;
+          } else {
+            // Regular commit: just get the diff from previous commit
+            console.log('Regular commit: Using HEAD~1..HEAD');
+            diffCommand = `git diff HEAD~1..HEAD -- ${ignoreFiles.join(' ')}`;
+          }
         } catch (error) {
-          console.log('Could not get recent commits:', error);
+          console.log('Could not determine commit type, using default diff:', error);
+          diffCommand = `git diff HEAD~1..HEAD -- ${ignoreFiles.join(' ')}`;
         }
       } else {
         // For opened events, get the full branch diff
@@ -53,15 +67,14 @@ export class GitHelper {
         diffCommand = `git diff origin/${baseBranch} origin/${headBranch} -- ${ignoreFiles.join(' ')}`;
       }
       
-      // First, let's see what files changed
-      try {
-        const fileCommand = eventAction === 'synchronize' 
-          ? `git diff --name-only HEAD~1..HEAD`
-          : `git diff --name-only origin/${baseBranch} origin/${headBranch}`;
-        const filesChanged = execSync(fileCommand, { encoding: 'utf8' });
-        console.log('Changed files:', filesChanged.split('\n').filter(f => f.trim()));
-      } catch (error) {
-        console.log('Could not get file list:', error);
+      // For synchronize events, also show what files were actually modified in the latest commit
+      if (eventAction === 'synchronize') {
+        try {
+          const filesInCommit = execSync(`git show --name-only --format="" HEAD`, { encoding: 'utf8' });
+          console.log('Files in latest commit:', filesInCommit.split('\n').filter(f => f.trim()));
+        } catch (error) {
+          console.log('Could not get files in commit:', error);
+        }
       }
       
       // Execute the git diff command
