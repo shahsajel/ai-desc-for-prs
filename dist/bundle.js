@@ -23958,8 +23958,7 @@ var OpenAIHelper = class {
               content: prompt
             }
           ],
-          temperature: this.temperature,
-          max_tokens: 1024
+          temperature: this.temperature
         })
       });
       const data = await response.json();
