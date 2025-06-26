@@ -29,7 +29,6 @@ class OpenAIHelper implements AIHelperInterface {
                 },
               ],
               temperature: this.temperature,
-              max_tokens: 1024,
             }),
           });
         
